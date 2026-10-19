@@ -1,0 +1,839 @@
+{
+  "courses": [
+    {
+      "id": "javascript-foundations",
+      "title": "JavaScript: Beginner to Advanced",
+      "description": "A complete, project-oriented path through JavaScript: start with values, control flow, data, and functions; build interactive browser experiences; work with modern modules and asynchronous APIs; then apply testing and performance techniques in a capstone.",
+      "language": "javascript",
+      "level": "Beginner to Advanced",
+      "estimatedMinutes": 420,
+      "recommendedPrerequisites": [],
+      "learningOutcomes": [
+        "Write and debug JavaScript programs using variables, data types, operators, conditions, loops, collections, and functions.",
+        "Use modern JavaScript syntax, modules, classes, and developer tooling to organize applications.",
+        "Build accessible browser interactions with the DOM, events, forms, storage, and safe rendering.",
+        "Work with promises, async/await, the event loop, Fetch, and cancellation.",
+        "Test, profile, and complete a small JavaScript application using a maintainable workflow."
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "core",
+      "title": "Core",
+      "courseId": "javascript-foundations",
+      "sortOrder": 1
+    },
+    {
+      "id": "control-flow",
+      "title": "Control flow",
+      "courseId": "javascript-foundations",
+      "sortOrder": 2
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "courseId": "javascript-foundations",
+      "sortOrder": 3
+    },
+    {
+      "id": "functions",
+      "title": "Functions",
+      "courseId": "javascript-foundations",
+      "sortOrder": 4
+    },
+    {
+      "id": "dom",
+      "title": "DOM",
+      "courseId": "javascript-foundations",
+      "sortOrder": 7
+    },
+    {
+      "id": "modern-js",
+      "title": "Modern JS",
+      "courseId": "javascript-foundations",
+      "sortOrder": 5
+    },
+    {
+      "id": "async",
+      "title": "Async",
+      "courseId": "javascript-foundations",
+      "sortOrder": 6
+    },
+    {
+      "id": "advanced-practice",
+      "title": "Advanced practice",
+      "courseId": "javascript-foundations",
+      "sortOrder": 8
+    }
+  ],
+  "lessons": [
+    {
+      "id": "first-steps",
+      "title": "Your first JavaScript",
+      "category": "Core",
+      "icon": "✎",
+      "duration": 7,
+      "level": "Beginner",
+      "description": "Meet JavaScript, discover where it runs, and write your very first line of code.",
+      "explanation": "JavaScript is a programming language that makes webpages interactive. You can run it right in your browser. The console is a friendly place to try an idea and see the result immediately.",
+      "code": "// Say hello to the console!\nconsole.log(\"Hello, world!\");\n\n// JavaScript powers interactive websites.",
+      "quiz": "Which built-in function prints a message to the browser console?",
+      "options": [
+        "console.log()",
+        "print.console()",
+        "showMessage()"
+      ],
+      "answer": 0,
+      "tip": "Open your browser's developer tools and find the Console tab to try this yourself.",
+      "practicePrompt": "Make the console greet a friend by name. Start with the code below, replace the blank text, and try your finished line in the browser console.",
+      "practiceStarter": "console.log(\"\");",
+      "practiceHint": "Put the greeting inside the quotation marks. Text values in JavaScript need matching quotation marks.",
+      "practiceSolution": "console.log(\"Hello, Sam!\");",
+      "quizExplanation": "console.log() writes the values you pass to it into the browser's developer console."
+    },
+    {
+      "id": "variables",
+      "title": "Variables & values",
+      "category": "Core",
+      "icon": "▱",
+      "duration": 8,
+      "level": "Beginner",
+      "description": "Store and name information with let and const, and choose the right one for the job.",
+      "explanation": "Variables give useful names to values. Use const when the binding won't be reassigned, and let when it will. Prefer const by default: it makes your code's intent easier to understand.",
+      "code": "const name = \"Ada\";\nlet score = 0;\n\nscore = score + 1;\nconsole.log(name, score);",
+      "quiz": "Which keyword should you usually try first when declaring a variable?",
+      "options": [
+        "var",
+        "const",
+        "mutable"
+      ],
+      "answer": 1,
+      "tip": "const prevents reassignment of a binding; for objects and arrays, their contents can still change."
+    },
+    {
+      "id": "types",
+      "title": "Data types",
+      "category": "Core",
+      "icon": "◈",
+      "duration": 8,
+      "level": "Beginner",
+      "description": "Get to know strings, numbers, booleans, null, undefined, and JavaScript's dynamic types.",
+      "explanation": "Every JavaScript value has a type. Common primitive types include string, number, boolean, undefined, null, bigint, and symbol. Use typeof to inspect most values while learning.",
+      "code": "const message = \"Hi!\";  // string\nconst age = 25;         // number\nconst ready = true;     // boolean\nlet later;              // undefined\n\nconsole.log(typeof age);",
+      "quiz": "What is the type of the value true?",
+      "options": [
+        "String",
+        "Number",
+        "Boolean"
+      ],
+      "answer": 2,
+      "tip": "JavaScript has one number type for both whole numbers and decimals."
+    },
+    {
+      "id": "operators",
+      "title": "Operators & expressions",
+      "category": "Core",
+      "icon": "±",
+      "duration": 8,
+      "level": "Beginner",
+      "description": "Calculate, compare, and combine values using JavaScript's everyday operators.",
+      "explanation": "Operators transform or compare values. Arithmetic operators include +, -, *, and /. Comparisons return booleans, and logical operators help combine conditions. Use === for strict equality.",
+      "code": "const subtotal = 12 + 8;\nconst hasDiscount = subtotal >= 20;\nconst total = hasDiscount ? subtotal - 2 : subtotal;\n\nconsole.log(total); // 18",
+      "quiz": "What does the strict equality operator === check?",
+      "options": [
+        "Only whether values look similar",
+        "Whether type and value are equal",
+        "Whether a value is greater"
+      ],
+      "answer": 1,
+      "tip": "Strict equality avoids automatic type conversion, which helps prevent surprising comparisons."
+    },
+    {
+      "id": "truthy-falsy",
+      "title": "Truthy & falsy values",
+      "category": "Core",
+      "icon": "◐",
+      "duration": 7,
+      "level": "Beginner",
+      "description": "Learn how JavaScript evaluates values in conditions and choose clear defaults.",
+      "explanation": "In a condition, values are converted to booleans. false, 0, an empty string, null, undefined, and NaN are falsy; most other values are truthy—including empty arrays and objects.",
+      "code": "const username = \"\";\nconst displayName = username || \"Guest\";\n\nif (displayName) {\n  console.log(`Welcome, ${displayName}!`);\n}",
+      "quiz": "Which value is falsy in JavaScript?",
+      "options": [
+        "[]",
+        "{}",
+        "0"
+      ],
+      "answer": 2,
+      "tip": "Use ?? when you only want a default for null or undefined; || also replaces other falsy values like 0."
+    },
+    {
+      "id": "strings",
+      "title": "Strings & template literals",
+      "category": "Core",
+      "icon": "❝",
+      "duration": 7,
+      "level": "Beginner",
+      "description": "Work with text, useful string methods, and readable template literals.",
+      "explanation": "Strings hold text. Template literals use backticks and ${...} to insert expressions, making it easier to combine a sentence and dynamic values.",
+      "code": "const learner = \"Sam\";\nconst topic = \"JavaScript\";\nconst greeting = `Hi ${learner},\nlet’s learn ${topic}!`;\n\nconsole.log(greeting);",
+      "quiz": "Which characters wrap a JavaScript template literal?",
+      "options": [
+        "Single quotes ' '",
+        "Backticks ` `",
+        "Parentheses ( )"
+      ],
+      "answer": 1,
+      "tip": "Template literals can span multiple lines without special newline characters."
+    },
+    {
+      "id": "conditionals",
+      "title": "Making decisions",
+      "category": "Control flow",
+      "icon": "⑂",
+      "duration": 8,
+      "level": "Beginner",
+      "description": "Choose what your program does next with if, else, and switch.",
+      "explanation": "Conditionals run different code depending on whether a condition is truthy. Use if and else for decisions, and switch when comparing one value against several specific cases.",
+      "code": "const temperature = 23;\n\nif (temperature > 30) {\n  console.log(\"Stay cool!\");\n} else {\n  console.log(\"Enjoy the day!\");\n}",
+      "quiz": "Which block runs when an if condition is false?",
+      "options": [
+        "The else block",
+        "The const block",
+        "The return block"
+      ],
+      "answer": 0,
+      "tip": "Keep conditions readable: a clearly named boolean can be easier to understand than a long expression."
+    },
+    {
+      "id": "loops",
+      "title": "Loops & iteration",
+      "category": "Control flow",
+      "icon": "⟳",
+      "duration": 9,
+      "level": "Beginner",
+      "description": "Repeat work with for and while loops, and know when a loop should stop.",
+      "explanation": "Loops repeat code while a condition is true. A for loop is handy when you know how to step through work; a while loop is useful when repetition depends on a condition. Make sure the condition eventually changes.",
+      "code": "const colors = [\"blue\", \"gold\", \"teal\"];\n\nfor (const color of colors) {\n  console.log(color);\n}",
+      "quiz": "What should eventually happen for a while loop to finish?",
+      "options": [
+        "Its condition becomes false",
+        "It sees an array",
+        "It calls console.log"
+      ],
+      "answer": 0,
+      "tip": "for...of is an easy way to visit each item in an iterable such as an array."
+    },
+    {
+      "id": "arrays",
+      "title": "Arrays & lists",
+      "category": "Data",
+      "icon": "▦",
+      "duration": 9,
+      "level": "Beginner",
+      "description": "Collect values into ordered arrays and get comfortable with indexes and useful methods.",
+      "explanation": "Arrays keep an ordered list of values. They are zero-indexed, so the first item is at index 0. Common tools include push, includes, slice, and length.",
+      "code": "const fruits = [\"pear\", \"mango\"];\nfruits.push(\"plum\");\n\nconsole.log(fruits[0]);       // \"pear\"\nconsole.log(fruits.length);   // 3",
+      "quiz": "What index is used for the first item in an array?",
+      "options": [
+        "1",
+        "0",
+        "-1"
+      ],
+      "answer": 1,
+      "tip": "Arrays can grow and shrink even when declared with const; const keeps the variable binding in place."
+    },
+    {
+      "id": "objects",
+      "title": "Objects & properties",
+      "category": "Data",
+      "icon": "◫",
+      "duration": 9,
+      "level": "Beginner",
+      "description": "Model real things with objects, key-value pairs, and property access.",
+      "explanation": "Objects group related information into properties. Dot notation is great for known property names; bracket notation is useful when the property name is stored in a variable.",
+      "code": "const book = {\n  title: \"Small Steps\",\n  pages: 120\n};\n\nconsole.log(book.title);\nbook.pages = 128;",
+      "quiz": "How do you access a property named title on book?",
+      "options": [
+        "book->title",
+        "book.title",
+        "title.book"
+      ],
+      "answer": 1,
+      "tip": "Objects are a core way to represent structured data in JavaScript."
+    },
+    {
+      "id": "map-set",
+      "title": "Map & Set collections",
+      "category": "Data",
+      "icon": "▧",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Use Map for key-value collections and Set for unique values.",
+      "explanation": "Map stores key-value pairs and preserves insertion order; keys can be any value. Set stores unique values, which makes it useful for removing duplicates or checking membership.",
+      "code": "const tags = new Set([\"js\", \"web\", \"js\"]);\nconst scores = new Map();\nscores.set(\"Ada\", 95);\n\nconsole.log(tags.size);       // 2\nconsole.log(scores.get(\"Ada\")); // 95",
+      "quiz": "Which collection automatically keeps only unique values?",
+      "options": [
+        "Set",
+        "Map",
+        "Array"
+      ],
+      "answer": 0,
+      "tip": "Choose Map when keys aren't naturally object property names, or when you need convenient size and iteration."
+    },
+    {
+      "id": "json",
+      "title": "JSON & data exchange",
+      "category": "Data",
+      "icon": "{ }",
+      "duration": 7,
+      "level": "Beginner",
+      "description": "Represent data as JSON and convert it to and from JavaScript values.",
+      "explanation": "JSON is a text format for exchanging structured data. JSON.stringify converts a JavaScript value to JSON text; JSON.parse converts valid JSON text back into a value.",
+      "code": "const user = { name: \"Mina\", active: true };\nconst text = JSON.stringify(user);\nconst restored = JSON.parse(text);\n\nconsole.log(restored.name); // \"Mina\"",
+      "quiz": "Which method converts JSON text into a JavaScript value?",
+      "options": [
+        "JSON.parse()",
+        "JSON.stringify()",
+        "JSON.convert()"
+      ],
+      "answer": 0,
+      "tip": "JSON doesn't support every JavaScript value—functions and undefined are not represented as JSON."
+    },
+    {
+      "id": "functions",
+      "title": "Functions & parameters",
+      "category": "Functions",
+      "icon": "ƒ",
+      "duration": 9,
+      "level": "Beginner",
+      "description": "Bundle reusable actions into functions, pass in parameters, and return results.",
+      "explanation": "Functions package a task so you can reuse it. Parameters are the names in the function definition; arguments are the values passed when you call it. return sends a result back to the caller.",
+      "code": "function greet(name) {\n  return `Hello, ${name}!`;\n}\n\nconst message = greet(\"Rae\");\nconsole.log(message);",
+      "quiz": "What does return do inside a function?",
+      "options": [
+        "Sends a result back to the caller",
+        "Repeats the function forever",
+        "Declares a new array"
+      ],
+      "answer": 0,
+      "tip": "A focused function with a clear name is easier to reuse and test."
+    },
+    {
+      "id": "arrow-functions",
+      "title": "Arrow functions",
+      "category": "Functions",
+      "icon": "↗",
+      "duration": 8,
+      "level": "Beginner",
+      "description": "Write concise function expressions and learn where arrow functions fit best.",
+      "explanation": "Arrow functions provide a compact way to write function expressions. When the body is a single expression, parentheses and an implicit return can make a short transformation easy to read.",
+      "code": "const double = (number) => number * 2;\nconst numbers = [1, 2, 3];\nconst doubled = numbers.map(double);\n\nconsole.log(doubled); // [2, 4, 6]",
+      "quiz": "What is returned by this arrow function: n => n * 2?",
+      "options": [
+        "The value of n times 2",
+        "Always undefined",
+        "A function name"
+      ],
+      "answer": 0,
+      "tip": "Arrow functions don't create their own this; keep this behavior in mind for object methods."
+    },
+    {
+      "id": "scope",
+      "title": "Scope & closures",
+      "category": "Functions",
+      "icon": "◎",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Understand where names are available, block scope, and functions that remember.",
+      "explanation": "Scope determines where a variable can be used. let and const are block-scoped. A closure happens when a function keeps access to variables from the scope where it was created.",
+      "code": "function makeCounter() {\n  let count = 0;\n  return () => ++count;\n}\n\nconst next = makeCounter();\nconsole.log(next()); // 1\nconsole.log(next()); // 2",
+      "quiz": "What lets the returned function remember count?",
+      "options": [
+        "A closure",
+        "A loop",
+        "A type conversion"
+      ],
+      "answer": 0,
+      "tip": "Closures are useful for creating private state and functions with a little bit of remembered context."
+    },
+    {
+      "id": "array-methods",
+      "title": "Transforming arrays",
+      "category": "Data",
+      "icon": "⤴",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Use map, filter, and reduce to turn collections into the results you need.",
+      "explanation": "map transforms every item into a new array, filter keeps items that match a test, and reduce combines items into a single result. These methods make data transformations expressive.",
+      "code": "const scores = [8, 12, 15, 6];\nconst passing = scores.filter(score => score >= 10);\nconst doubled = passing.map(score => score * 2);\n\nconsole.log(doubled); // [24, 30]",
+      "quiz": "Which array method creates a new array with transformed items?",
+      "options": [
+        "map()",
+        "filter()",
+        "findIndex()"
+      ],
+      "answer": 0,
+      "tip": "Each callback receives the current item, and can also receive its index and the original array."
+    },
+    {
+      "id": "errors",
+      "title": "Errors & debugging",
+      "category": "Core",
+      "icon": "⌁",
+      "duration": 8,
+      "level": "Beginner",
+      "description": "Read error messages, handle exceptions, and debug with confidence.",
+      "explanation": "Errors are clues. Read the error type and stack trace, then inspect the values near the reported line. try...catch handles an exception when you can take a useful recovery action.",
+      "code": "try {\n  JSON.parse(\"{bad json}\");\n} catch (error) {\n  console.error(\"Could not read data:\", error.message);\n}",
+      "quiz": "Where does a caught error become available?",
+      "options": [
+        "The catch block parameter",
+        "The if condition",
+        "The finally keyword"
+      ],
+      "answer": 0,
+      "tip": "Avoid catching errors you can't meaningfully handle; an error visible in development is easier to fix."
+    },
+    {
+      "id": "dom",
+      "title": "Meet the DOM",
+      "category": "DOM",
+      "icon": "▣",
+      "duration": 9,
+      "level": "Beginner",
+      "description": "Explore how the browser represents a page and find elements with JavaScript.",
+      "explanation": "The Document Object Model (DOM) is the browser's object-based representation of your page. Use querySelector to find an element, then inspect or update it.",
+      "code": "const heading = document.querySelector(\"h1\");\n\nif (heading) {\n  heading.textContent = \"Hello, DOM!\";\n}",
+      "quiz": "Which method is commonly used to find the first matching page element?",
+      "options": [
+        "document.querySelector()",
+        "document.findFirst()",
+        "window.getMarkup()"
+      ],
+      "answer": 0,
+      "tip": "Check that an element was found before trying to update it."
+    },
+    {
+      "id": "events",
+      "title": "Events & interaction",
+      "category": "DOM",
+      "icon": "☝",
+      "duration": 9,
+      "level": "Beginner",
+      "description": "Listen for clicks, keyboard input, and other events to bring a page to life.",
+      "explanation": "Events tell your code that something happened. addEventListener attaches a function that runs when the selected event occurs, such as a click or a form submission.",
+      "code": "const button = document.querySelector(\"button\");\n\nbutton?.addEventListener(\"click\", () => {\n  console.log(\"Thanks for clicking!\");\n});",
+      "quiz": "Which method attaches an event handler to an element?",
+      "options": [
+        "addEventListener()",
+        "listenFor()",
+        "onEventOnly()"
+      ],
+      "answer": 0,
+      "tip": "For forms, handle the submit event and call preventDefault() when you need to manage the submission yourself."
+    },
+    {
+      "id": "dom-build",
+      "title": "Update the page",
+      "category": "DOM",
+      "icon": "✧",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Create elements and update a webpage safely and accessibly.",
+      "explanation": "You can create DOM elements with createElement, set their textContent, and append them to the page. For plain text, textContent is a safer choice than interpreting a string as HTML.",
+      "code": "const item = document.createElement(\"li\");\nitem.textContent = \"Practice JavaScript\";\n\ndocument.querySelector(\"ul\")?.append(item);",
+      "quiz": "Which property sets an element's plain text content?",
+      "options": [
+        "textContent",
+        "htmlText",
+        "innerCode"
+      ],
+      "answer": 0,
+      "tip": "Use textContent for user-provided text rather than inserting it as HTML."
+    },
+    {
+      "id": "modules",
+      "title": "Modules & imports",
+      "category": "Modern JS",
+      "icon": "⬡",
+      "duration": 8,
+      "level": "Intermediate",
+      "description": "Split code into reusable files with export and import.",
+      "explanation": "ES modules let you organize code into files. Export the values a file shares; import them where they're needed. In the browser, modules use type=\"module\" on a script element.",
+      "code": "// math.js\nexport const add = (a, b) => a + b;\n\n// app.js\nimport { add } from \"./math.js\";\nconsole.log(add(2, 3));",
+      "quiz": "Which keyword shares a named value from a module?",
+      "options": [
+        "export",
+        "share",
+        "public"
+      ],
+      "answer": 0,
+      "tip": "Modules run in strict mode and support a clean, explicit dependency structure."
+    },
+    {
+      "id": "destructuring",
+      "title": "Destructuring & spread",
+      "category": "Modern JS",
+      "icon": "⤢",
+      "duration": 8,
+      "level": "Intermediate",
+      "description": "Pull values out of objects and arrays, and make useful copies with spread.",
+      "explanation": "Destructuring gives values from objects or arrays convenient names. The spread syntax (...) expands iterable values or copies enumerable object properties into a new object.",
+      "code": "const user = { name: \"Jo\", level: 3 };\nconst { name, level } = user;\nconst upgraded = { ...user, level: level + 1 };\n\nconsole.log(name, upgraded.level);",
+      "quiz": "How can spread help make a shallow copy of an object?",
+      "options": [
+        "{ ...original }",
+        "copy(original)",
+        "original => copy"
+      ],
+      "answer": 0,
+      "tip": "Spread makes a shallow copy; nested objects are still shared references."
+    },
+    {
+      "id": "promises",
+      "title": "Promises",
+      "category": "Async",
+      "icon": "◌",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Understand pending, fulfilled, and rejected work that finishes later.",
+      "explanation": "A Promise represents a value that may be available in the future. It can be pending, fulfilled, or rejected. Use then and catch to react to its outcome, or await it inside an async function.",
+      "code": "fetch(\"/api/hello\")\n  .then(response => response.json())\n  .then(data => console.log(data))\n  .catch(error => console.error(error));",
+      "quiz": "Which Promise state represents a successful result?",
+      "options": [
+        "Fulfilled",
+        "Waiting",
+        "Pending only"
+      ],
+      "answer": 0,
+      "tip": "A promise can settle once: it either fulfills with a value or rejects with a reason."
+    },
+    {
+      "id": "async-await",
+      "title": "Async & await",
+      "category": "Async",
+      "icon": "⇢",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Write clear asynchronous code with async functions and await.",
+      "explanation": "An async function always returns a Promise. Inside it, await pauses that function until the awaited promise settles, letting asynchronous steps read in a natural order.",
+      "code": "async function loadMessage() {\n  try {\n    const response = await fetch(\"/api/hello\");\n    const data = await response.json();\n    console.log(data);\n  } catch (error) {\n    console.error(\"Loading failed:\", error);\n  }\n}",
+      "quiz": "What does an async function always return?",
+      "options": [
+        "A Promise",
+        "A DOM element",
+        "A loop"
+      ],
+      "answer": 0,
+      "tip": "Use try...catch around awaited work when you want to handle a rejected promise."
+    },
+    {
+      "id": "event-loop",
+      "title": "The event loop",
+      "category": "Async",
+      "icon": "⟳",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "See how synchronous code, callbacks, and promises take turns in the browser.",
+      "explanation": "JavaScript runs synchronous work on a call stack. The event loop coordinates that work with browser tasks. Promise callbacks (microtasks) run after the current stack clears and before the next task, such as a timer callback.",
+      "code": "console.log(\"first\");\nsetTimeout(() => console.log(\"timer\"), 0);\nPromise.resolve().then(() => console.log(\"promise\"));\nconsole.log(\"last\");\n// first → last → promise → timer",
+      "quiz": "After the synchronous code finishes, which callback runs first?",
+      "options": [
+        "Promise callback",
+        "Timer callback",
+        "They both run before synchronous code"
+      ],
+      "answer": 0,
+      "tip": "A timer with a delay of 0 is scheduled for a later task; it does not interrupt the current code."
+    },
+    {
+      "id": "fetch",
+      "title": "Fetch & APIs",
+      "category": "Async",
+      "icon": "⇄",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Request data from an API and work with HTTP responses and JSON.",
+      "explanation": "fetch sends an HTTP request and returns a Promise for a Response. Check response.ok before reading the body: HTTP errors like 404 do not automatically reject the fetch promise.",
+      "code": "async function loadItems() {\n  const response = await fetch(\"/api/items\");\n  if (!response.ok) {\n    throw new Error(`HTTP ${response.status}`);\n  }\n  const items = await response.json();\n  console.log(items);\n}\n\nloadItems();",
+      "quiz": "Does fetch automatically reject for an HTTP 404 response?",
+      "options": [
+        "Yes, every non-200 rejects",
+        "No, check response.ok",
+        "Only when parsing JSON"
+      ],
+      "answer": 1,
+      "tip": "Network errors reject fetch; most HTTP error status codes still return a Response."
+    },
+    {
+      "id": "classes",
+      "title": "Classes & prototypes",
+      "category": "Modern JS",
+      "icon": "♧",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Learn how JavaScript objects share behavior with prototypes and class syntax.",
+      "explanation": "JavaScript objects can inherit properties through their prototype chain. class syntax provides a familiar way to define constructors and methods, while still using prototypes underneath.",
+      "code": "class Pet {\n  constructor(name) {\n    this.name = name;\n  }\n  speak() {\n    return `${this.name} says hi!`;\n  }\n}\n\nconsole.log(new Pet(\"Mochi\").speak());",
+      "quiz": "In JavaScript, class methods are generally placed on what?",
+      "options": [
+        "The class prototype",
+        "The browser console",
+        "A global variable"
+      ],
+      "answer": 0,
+      "tip": "Reach for classes when they help explain your model, not just to wrap every function."
+    },
+    {
+      "id": "this",
+      "title": "The this keyword",
+      "category": "Functions",
+      "icon": "◉",
+      "duration": 8,
+      "level": "Intermediate",
+      "description": "Understand how call-site and arrow-function rules determine this.",
+      "explanation": "In a regular function, this generally depends on how the function is called. A method call such as object.method() sets this to object. Arrow functions instead capture this from their surrounding scope.",
+      "code": "const player = {\n  name: \"Kai\",\n  sayName() {\n    return this.name;\n  }\n};\n\nconsole.log(player.sayName()); // \"Kai\"",
+      "quiz": "In player.sayName(), what is this inside a regular sayName method?",
+      "options": [
+        "player",
+        "The return value",
+        "Always window"
+      ],
+      "answer": 0,
+      "tip": "A detached method call loses its receiver; think about the call site when this surprises you."
+    },
+    {
+      "id": "storage",
+      "title": "Browser storage",
+      "category": "DOM",
+      "icon": "▣",
+      "duration": 8,
+      "level": "Intermediate",
+      "description": "Keep small bits of browser data across visits using localStorage.",
+      "explanation": "localStorage stores string values in the browser and keeps them across sessions. Convert structured values to and from JSON, and avoid storing sensitive information in client-side storage.",
+      "code": "const settings = { theme: \"light\" };\nlocalStorage.setItem(\"settings\", JSON.stringify(settings));\n\nconst saved = localStorage.getItem(\"settings\");\nconst restored = saved ? JSON.parse(saved) : null;",
+      "quiz": "What kind of values does localStorage store?",
+      "options": [
+        "Strings",
+        "Functions",
+        "DOM elements"
+      ],
+      "answer": 0,
+      "tip": "Storage may be unavailable or contain invalid data, so consider error handling in production code."
+    },
+    {
+      "id": "tooling",
+      "title": "Modules, npm & tooling",
+      "category": "Modern JS",
+      "icon": "⌘",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "See how package managers, development tools, and browser devtools support real projects.",
+      "explanation": "As projects grow, tools help install packages, run scripts, lint code, and build for deployment. npm is the package manager included with Node.js. Browser developer tools help inspect code and diagnose issues.",
+      "code": "// In a project with a package.json:\n// npm install\n// npm run dev\n\nconsole.log(\"Build, test, and inspect as you learn.\");",
+      "quiz": "Which package manager is commonly distributed with Node.js?",
+      "options": [
+        "npm",
+        "DOM",
+        "JSON"
+      ],
+      "answer": 0,
+      "tip": "You can learn JavaScript fundamentals directly in the browser before adopting any build tools."
+    },
+    {
+      "id": "forms-validation",
+      "title": "Forms & validation",
+      "category": "DOM",
+      "icon": "▤",
+      "duration": 9,
+      "level": "Intermediate",
+      "description": "Read form values and give clear feedback before acting on user input.",
+      "explanation": "Forms collect information from people. Use native constraints such as required and type=\"email\" where appropriate, then handle the submit event and validate the values your program needs. Client-side checks improve the experience, but a server must still validate data it receives.",
+      "code": "const form = document.querySelector(\"#signup\");\n\nform.addEventListener(\"submit\", (event) => {\n  event.preventDefault();\n  const data = new FormData(form);\n  const name = String(data.get(\"name\") || \"\").trim();\n  console.log(name ? `Welcome, ${name}!` : \"Please enter your name.\");\n});",
+      "quiz": "Why should a server validate form data even when the browser already checks it?",
+      "options": [
+        "Browser checks can be bypassed or changed by a user.",
+        "Servers cannot receive form data.",
+        "It makes every request run faster."
+      ],
+      "answer": 0,
+      "tip": "Use browser validation to guide people, and repeat important checks at the trusted server boundary.",
+      "practicePrompt": "Trim the spaces from a name, then show a friendly message only when a name remains.",
+      "practiceStarter": "const name = \"  River  \";\nconst cleanName = name;\nconsole.log(cleanName);",
+      "practiceHint": "Strings have a trim() method. An if statement can check whether the cleaned string is empty.",
+      "practiceSolution": "const name = \"  River  \";\nconst cleanName = name.trim();\nif (cleanName) console.log(`Welcome, ${cleanName}!`);",
+      "quizExplanation": "Client-side validation is helpful for usability, but a user can disable or bypass browser code. The server is the trusted place to validate incoming data."
+    },
+    {
+      "id": "safe-dom-rendering",
+      "title": "Safer page updates",
+      "category": "DOM",
+      "icon": "◇",
+      "duration": 8,
+      "level": "Advanced",
+      "description": "Display user-provided text without treating it as page markup.",
+      "explanation": "When showing plain text, assign it with textContent. Avoid building HTML strings from untrusted input and passing them to innerHTML: the browser may interpret that input as markup. Validate data for your app's rules as well, and do not mistake display safety for server-side validation.",
+      "code": "const message = document.querySelector(\"#message\");\nconst userText = \"Hello, learner!\";\n\nmessage.textContent = userText;",
+      "quiz": "Which property should you use to display untrusted content as plain text?",
+      "options": [
+        "textContent",
+        "innerHTML",
+        "outerHTML"
+      ],
+      "answer": 0,
+      "tip": "Choose APIs that match the data: textContent for text, and carefully constructed DOM nodes for structured content.",
+      "practicePrompt": "Update the page's #status element with the text stored in statusMessage.",
+      "practiceStarter": "const statusMessage = \"Ready to learn!\";\nconst status = document.querySelector(\"#status\");\n// Add a safe text update here",
+      "practiceHint": "Use the property intended for plain text rather than parsing an HTML string.",
+      "practiceSolution": "const statusMessage = \"Ready to learn!\";\nconst status = document.querySelector(\"#status\");\nstatus.textContent = statusMessage;",
+      "quizExplanation": "textContent inserts a string as text. innerHTML parses strings as markup, which is unsafe for untrusted content."
+    },
+    {
+      "id": "url-search-params",
+      "title": "Browser URL tools",
+      "category": "DOM",
+      "icon": "↗",
+      "duration": 8,
+      "level": "Intermediate",
+      "description": "Read and update query-string values with the URL and URLSearchParams APIs.",
+      "explanation": "The URL and URLSearchParams browser APIs help work with links without manually splitting strings. Search parameters can be read with get(), changed with set(), and serialized safely with toString(). A missing key returns null, so decide what your interface should show in that case.",
+      "code": "const params = new URLSearchParams(window.location.search);\nconst topic = params.get(\"topic\") || \"all\";\nconsole.log(`Showing: ${topic}`);",
+      "quiz": "What does URLSearchParams.get(\"topic\") return when that key is missing?",
+      "options": [
+        "null",
+        "An empty array",
+        "The whole URL"
+      ],
+      "answer": 0,
+      "tip": "Use URLSearchParams instead of manually concatenating query strings; it handles encoding for you.",
+      "practicePrompt": "Read the page query parameter named level, and use \"beginner\" when it is missing.",
+      "practiceStarter": "const params = new URLSearchParams(\"?level=\");\nconst level = params.get(\"level\");\nconsole.log(level);",
+      "practiceHint": "The || operator can provide a fallback when get() returns null or an empty string.",
+      "practiceSolution": "const params = new URLSearchParams(\"?level=\");\nconst level = params.get(\"level\") || \"beginner\";\nconsole.log(level);",
+      "quizExplanation": "URLSearchParams.get() returns null when the requested parameter is absent."
+    },
+    {
+      "id": "cancelling-async-work",
+      "title": "Cancelling async work",
+      "category": "Async",
+      "icon": "⏹",
+      "duration": 9,
+      "level": "Advanced",
+      "description": "Use AbortController to stop a fetch that is no longer needed.",
+      "explanation": "Some browser operations, including fetch(), accept an AbortSignal. Create an AbortController, pass its signal to the operation, and call abort() when the result is no longer useful—for example, when a search is replaced. Handle the resulting rejection as an expected cancellation when appropriate.",
+      "code": "const controller = new AbortController();\n\nfetch(\"/api/lessons\", { signal: controller.signal })\n  .then((response) => response.json())\n  .then((lessons) => console.log(lessons))\n  .catch((error) => {\n    if (error.name !== \"AbortError\") throw error;\n  });\n\n// Call controller.abort() when this request is no longer needed.",
+      "quiz": "Which object provides the signal used to cancel a fetch request?",
+      "options": [
+        "AbortController",
+        "URLSearchParams",
+        "FormData"
+      ],
+      "answer": 0,
+      "tip": "Cancel stale work when users change search terms quickly so old results do not overwrite new ones.",
+      "practicePrompt": "Create a controller, pass its signal to fetch, and cancel the request when the user no longer needs it.",
+      "practiceStarter": "const controller = new AbortController();\nfetch(\"/api/results\");\n// Connect the signal and cancel when needed",
+      "practiceHint": "Fetch accepts an options object with a signal property. The controller has an abort() method.",
+      "practiceSolution": "const controller = new AbortController();\nfetch(\"/api/results\", { signal: controller.signal });\ncontroller.abort();",
+      "quizExplanation": "AbortController creates the AbortSignal that supported browser operations use to receive a cancellation request."
+    },
+    {
+      "id": "iterators-generators",
+      "title": "Iterators & generators",
+      "category": "Advanced practice",
+      "icon": "⟳",
+      "duration": 10,
+      "level": "Advanced",
+      "description": "Produce sequence values on demand with iterators and generator functions.",
+      "explanation": "An iterator follows the next() protocol and returns an object with value and done fields. A generator function, written with function*, pauses at each yield and returns an iterator. This is useful when values should be produced step by step instead of building a whole list first.",
+      "code": "function* steps() {\n  yield \"plan\";\n  yield \"build\";\n  yield \"review\";\n}\n\nfor (const step of steps()) {\n  console.log(step);\n}",
+      "quiz": "Which keyword pauses a generator and provides its next value?",
+      "options": [
+        "yield",
+        "await",
+        "break"
+      ],
+      "answer": 0,
+      "tip": "Generators are lazy: each next() call resumes the function until its next yield.",
+      "practicePrompt": "Create a generator that yields the numbers 1, 2, and 3, then print each value.",
+      "practiceStarter": "function* countUp() {\n  // Add three yield statements\n}\n\nfor (const number of countUp()) console.log(number);",
+      "practiceHint": "Place yield before each value inside the generator function.",
+      "practiceSolution": "function* countUp() {\n  yield 1;\n  yield 2;\n  yield 3;\n}\n\nfor (const number of countUp()) console.log(number);",
+      "quizExplanation": "yield pauses a generator function and makes its value available to the iterator."
+    },
+    {
+      "id": "testing-functions",
+      "title": "Testing your functions",
+      "category": "Advanced practice",
+      "icon": "✓",
+      "duration": 10,
+      "level": "Advanced",
+      "description": "Check expected behavior with small, repeatable tests.",
+      "explanation": "A test gives your code an input and checks the result against an expectation. Start with small functions that have clear inputs and outputs. A test runner can automate these checks, but even a simple assertion helps make assumptions visible. Include normal cases and important edge cases.",
+      "code": "function double(value) {\n  return value * 2;\n}\n\nconsole.assert(double(3) === 6, \"3 should double to 6\");\nconsole.assert(double(0) === 0, \"0 should stay 0\");",
+      "quiz": "What does a useful test compare?",
+      "options": [
+        "An actual result with an expected result.",
+        "Two unrelated function names.",
+        "The source file size with the screen size."
+      ],
+      "answer": 0,
+      "tip": "A failing test should tell you what behavior was expected, not just that something went wrong.",
+      "practicePrompt": "Write a small test that checks whether add(2, 3) returns 5.",
+      "practiceStarter": "function add(a, b) {\n  return a + b;\n}\n\n// Check the result of add(2, 3)",
+      "practiceHint": "Compare the function call with 5, then pass the boolean condition to console.assert().",
+      "practiceSolution": "function add(a, b) {\n  return a + b;\n}\n\nconsole.assert(add(2, 3) === 5, \"2 + 3 should equal 5\");",
+      "quizExplanation": "A test checks whether the code's actual result matches the behavior you expect."
+    },
+    {
+      "id": "performance-basics",
+      "title": "Performance & cleanup",
+      "category": "Advanced practice",
+      "icon": "⚡",
+      "duration": 9,
+      "level": "Advanced",
+      "description": "Measure real work, avoid needless repeated work, and clean up listeners.",
+      "explanation": "Performance work starts with observing a real slowdown instead of guessing. Reuse values that do not change inside repeated work, and remove event listeners or timers when their owner is no longer active. The Performance API can help measure elapsed time, but tiny measurements vary between runs and should not be treated as precise benchmarks.",
+      "code": "const start = performance.now();\n\nconst visibleNames = names.filter((name) => name.startsWith(\"A\"));\nrenderNames(visibleNames);\n\nconsole.log(`Updated in ${performance.now() - start} ms`);",
+      "quiz": "What is a sensible first step when an app seems slow?",
+      "options": [
+        "Measure and identify the slow work.",
+        "Rewrite every function immediately.",
+        "Add a delay so it feels smoother."
+      ],
+      "answer": 0,
+      "tip": "When adding a listener in a component, also plan how it will be removed when the component is done.",
+      "practicePrompt": "Measure how long a small calculation takes using performance.now().",
+      "practiceStarter": "const start = performance.now();\n// Do a small piece of work\nconst end = performance.now();\nconsole.log(\"Elapsed:\", end - start);",
+      "practiceHint": "Take one timestamp before the work and one afterward; subtract the first from the second.",
+      "practiceSolution": "const start = performance.now();\nconst total = [1, 2, 3].reduce((sum, value) => sum + value, 0);\nconst end = performance.now();\nconsole.log(total, \"Elapsed:\", end - start);",
+      "quizExplanation": "Measure first so you can focus improvements on the actual bottleneck instead of guessing."
+    },
+    {
+      "id": "learning-app-capstone",
+      "title": "Capstone: a learning checklist",
+      "category": "Advanced practice",
+      "icon": "★",
+      "duration": 15,
+      "level": "Advanced",
+      "description": "Plan, build, test, and improve a small interactive learning checklist.",
+      "explanation": "A capstone connects skills from the course. Start with one user goal and a small list of tasks. Build one behavior at a time, keep state in JavaScript data, update the page safely, and test important cases. Finish by asking someone to try it and using their feedback to choose the next improvement.",
+      "code": "const lessons = [\n  { title: \"Variables\", complete: false },\n  { title: \"Functions\", complete: true }\n];\n\nconst remaining = lessons.filter((lesson) => !lesson.complete);\nconsole.log(`${remaining.length} lessons left to learn!`);",
+      "quiz": "What is the best first step before building a capstone?",
+      "options": [
+        "Define a small user goal and the behavior to build.",
+        "Add every feature you can imagine.",
+        "Choose colors before deciding what the app does."
+      ],
+      "answer": 0,
+      "tip": "Keep the first version small enough to finish, test, and show to another person.",
+      "practicePrompt": "Add a function that returns only the unfinished lessons from the sample list.",
+      "practiceStarter": "const lessons = [\n  { title: \"Variables\", complete: false },\n  { title: \"Functions\", complete: true }\n];\n\nfunction getRemaining(items) {\n  // Return unfinished lessons\n}",
+      "practiceHint": "The filter() method keeps items when its callback returns true.",
+      "practiceSolution": "function getRemaining(items) {\n  return items.filter((lesson) => !lesson.complete);\n}",
+      "quizExplanation": "A clear, small user goal helps you choose the right first feature and finish a useful version."
+    }
+  ]
+}

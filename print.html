@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="An interactive, beginner-friendly guide to JavaScript. Learn the fundamentals and build confidence one concept at a time.">
+  <title>Script School — Learn JavaScript</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #808898;
+      --muted-dark: #a1aaba;
+      --paper: #f7f8fc;
+      --surface: #fff;
+      --line: #edf0f5;
+      --purple: #7058e8;
+      --purple-dark: #5f47d3;
+      --purple-pale: #f0edff;
+      --green: #32ae82;
+      --amber: #efa848;
+      --sidebar: #171b2b;
+      --sidebar-muted: #969db2;
+      --shadow: 0 12px 34px rgba(31, 38, 65, .055);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; color: var(--ink); background: var(--paper); }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible { outline: 3px solid rgba(112, 88, 232, .38); outline-offset: 3px; }
+    .app { min-height: 100vh; }
+    .sidebar {
+      position: fixed; inset: 0 auto 0 0; z-index: 5; display: flex; flex-direction: column;
+      width: 248px; padding: 25px 17px 20px; color: white; background: var(--sidebar);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 1px 8px 31px; color: white; text-decoration: none; }
+    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; color: #fff; background: var(--purple); font-size: 20px; font-weight: 800; }
+    .brand-name { font-size: 17px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-name span { color: #b9aaff; }
+    .nav-label { margin: 0 9px 10px; color: #777f97; font-size: 10px; font-weight: 750; letter-spacing: 1.3px; text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; }
+    .nav-button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; padding: 0 11px; border: 0; border-radius: 9px; color: var(--sidebar-muted); background: transparent; cursor: pointer; text-align: left; font-size: 13px; transition: background .18s, color .18s; }
+    .nav-button:hover, .nav-button.active { color: #fff; background: #292e43; }
+    .nav-button.active { box-shadow: inset 3px 0 #927fff; }
+    .nav-icon { width: 19px; text-align: center; font-size: 16px; }
+    .nav-count { margin-left: auto; color: #8f97ad; font-size: 11px; }
+    .sidebar-spacer { flex: 1; }
+    .side-card { padding: 15px; border: 1px solid #30354b; border-radius: 13px; background: #202538; }
+    .side-card-top { display: flex; align-items: center; justify-content: space-between; color: #dce0eb; font-size: 11px; font-weight: 650; }
+    .streak-badge { padding: 4px 7px; border-radius: 20px; color: #ffd18b; background: #453728; font-size: 10px; }
+    .side-card p { margin: 9px 0 12px; color: #9ba3b7; font-size: 11px; line-height: 1.55; }
+    .side-progress { height: 5px; overflow: hidden; border-radius: 8px; background: #363b50; }
+    .side-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: #a493ff; transition: width .3s; }
+    .sidebar-footer { padding: 17px 9px 0; color: #737b91; font-size: 10px; }
+
+    .main { min-height: 100vh; margin-left: 248px; }
+    .topbar { position: sticky; top: 0; z-index: 4; display: flex; height: 68px; align-items: center; justify-content: space-between; padding: 0 43px; border-bottom: 1px solid #ebeef4; background: rgba(255,255,255,.91); backdrop-filter: blur(14px); }
+    .breadcrumb { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; }
+    .breadcrumb strong { color: #394154; font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 13px; }
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; top: 50%; left: 12px; color: #9098a7; transform: translateY(-50%); pointer-events: none; }
+    .search { width: 220px; height: 36px; padding: 0 52px 0 35px; border: 1px solid #eceef3; border-radius: 8px; color: var(--ink); background: #fafbfc; font-size: 12px; transition: width .2s, border-color .2s; }
+    .search:focus { width: 270px; border-color: #c6bcff; outline: none; }
+    .search::placeholder { color: #9aa1ae; }
+    .shortcut { position: absolute; top: 50%; right: 8px; padding: 2px 5px; border: 1px solid #e6e8ee; border-radius: 4px; color: #9399a7; background: white; transform: translateY(-50%); font-size: 9px; }
+    .avatar { display: grid; width: 33px; height: 33px; place-items: center; border: 0; border-radius: 50%; color: #634ed1; background: #ece8ff; font-size: 11px; font-weight: 750; }
+    .content { width: min(1110px, 100%); margin: 0 auto; padding: 32px 43px 58px; }
+    .welcome-line { margin: 0 0 8px; color: var(--muted); font-size: 12px; font-weight: 500; }
+    h1 { margin: 0; font-size: clamp(25px, 3vw, 32px); font-weight: 760; letter-spacing: -1.1px; line-height: 1.2; }
+    .intro { margin: 9px 0 24px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+    .hero { position: relative; display: grid; min-height: 214px; grid-template-columns: 1.18fr .82fr; overflow: hidden; border-radius: 15px; color: white; background: #6955df; box-shadow: 0 10px 22px rgba(91, 69, 204, .17); }
+    .hero-copy { position: relative; z-index: 1; padding: 26px 28px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 30px; color: #eeeaff; background: rgba(255,255,255,.1); font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+    .hero h2 { max-width: 385px; margin: 13px 0 7px; font-size: clamp(21px, 2.7vw, 27px); letter-spacing: -.8px; line-height: 1.22; }
+    .hero-copy p { margin: 0 0 18px; color: #e2defe; font-size: 11px; line-height: 1.6; }
+    .button-primary { display: inline-flex; align-items: center; gap: 8px; min-height: 35px; padding: 0 13px; border: 0; border-radius: 7px; color: #543ecb; background: white; cursor: pointer; font-size: 11px; font-weight: 700; transition: transform .16s, box-shadow .16s; }
+    .button-primary:hover { box-shadow: 0 5px 15px rgba(40, 28, 105, .18); transform: translateY(-1px); }
+    .hero-visual { position: relative; display: grid; place-items: center; background: radial-gradient(ellipse at 54% 49%, rgba(182,170,255,.34), transparent 60%); }
+    .orbit { position: absolute; width: 190px; height: 190px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; }
+    .orbit::before, .orbit::after { position: absolute; inset: 16px; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; content: ""; }
+    .orbit::after { inset: 34px; }
+    .js-tile { position: relative; display: grid; width: 86px; height: 86px; place-items: end; padding: 12px; border: 1px solid rgba(255,255,255,.45); border-radius: 18px; color: #5d48cb; background: linear-gradient(145deg, #fff7bb, #ffd861); box-shadow: 0 14px 28px rgba(45,30,120,.23); transform: rotate(-8deg); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 25px; font-weight: 850; letter-spacing: -2px; }
+    .float-code { position: absolute; top: 33px; right: 23px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; color: #f3efff; background: rgba(39,29,106,.25); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 9px; transform: rotate(5deg); }
+    .float-dot { position: absolute; bottom: 33px; left: 34px; width: 11px; height: 11px; border: 2px solid rgba(255,255,255,.75); border-radius: 50%; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin: 17px 0 29px; }
+    .stat { display: flex; min-height: 73px; align-items: center; gap: 11px; padding: 12px 15px; border: 1px solid #eff0f5; border-radius: 11px; background: white; }
+    .stat-icon { display: grid; width: 35px; height: 35px; flex: 0 0 35px; place-items: center; border-radius: 10px; background: #f1efff; font-size: 15px; }
+    .stat:nth-child(2) .stat-icon { background: #fff5e9; }
+    .stat:nth-child(3) .stat-icon { background: #e9f7f2; }
+    .stat-value { font-size: 17px; font-weight: 760; letter-spacing: -.5px; }
+    .stat-label { margin-top: 2px; color: var(--muted); font-size: 10px; }
+
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
+    .section-heading h2 { margin: 0; font-size: 17px; font-weight: 740; letter-spacing: -.4px; }
+    .section-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .text-button { padding: 5px 2px; border: 0; color: var(--purple); background: none; cursor: pointer; font-size: 11px; font-weight: 700; }
+    .continue-card { display: grid; grid-template-columns: 45px 1fr auto; align-items: center; gap: 14px; padding: 15px 17px; border: 1px solid #eceaf7; border-radius: 11px; background: white; }
+    .continue-icon { display: grid; width: 43px; height: 43px; place-items: center; border-radius: 11px; color: #5e4ad0; background: #f0edff; font-size: 18px; }
+    .continue-title { font-size: 12px; font-weight: 720; }
+    .continue-meta { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .continue-bar-wrap { width: min(170px, 20vw); }
+    .continue-bar { height: 5px; overflow: hidden; border-radius: 5px; background: #eeedf5; }
+    .continue-bar span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--purple); transition: width .3s; }
+    .continue-caption { margin-top: 5px; color: var(--muted); text-align: right; font-size: 9px; }
+    .button-continue { min-height: 34px; padding: 0 12px; border: 0; border-radius: 7px; color: white; background: var(--purple); cursor: pointer; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .button-continue:hover { background: var(--purple-dark); }
+
+    .curriculum { margin-top: 31px; }
+    .curriculum-head { align-items: center; margin-bottom: 14px; }
+    .filter-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 15px; }
+    .filter { min-height: 29px; padding: 0 11px; border: 1px solid #e9ebf1; border-radius: 20px; color: #737c8d; background: white; cursor: pointer; font-size: 10px; transition: all .15s; }
+    .filter:hover { border-color: #d5cefa; color: var(--purple); }
+    .filter.active { border-color: var(--purple); color: white; background: var(--purple); }
+    .lesson-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .lesson-card { display: flex; min-height: 162px; flex-direction: column; padding: 14px; border: 1px solid #eceef3; border-radius: 11px; background: white; cursor: pointer; text-align: left; transition: transform .17s, border-color .17s, box-shadow .17s; }
+    .lesson-card:hover { border-color: #ddd7ff; box-shadow: 0 8px 21px rgba(47, 40, 99, .07); transform: translateY(-2px); }
+    .lesson-top { display: flex; align-items: center; justify-content: space-between; }
+    .lesson-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: #f0edff; font-size: 15px; }
+    .lesson-card[data-category="Core"] .lesson-icon { background: #f0edff; }
+    .lesson-card[data-category="Control flow"] .lesson-icon { background: #fff4e7; }
+    .lesson-card[data-category="Functions"] .lesson-icon { background: #e9f7f1; }
+    .lesson-card[data-category="Data"] .lesson-icon { background: #eaf4ff; }
+    .lesson-card[data-category="DOM"] .lesson-icon { background: #fff0f2; }
+    .lesson-card[data-category="Async"] .lesson-icon { background: #f3edff; }
+    .lesson-card[data-category="Modern JS"] .lesson-icon { background: #eaf8f8; }
+    .lesson-status { padding: 4px 7px; border-radius: 20px; color: #8c93a0; background: #f4f5f7; font-size: 8px; font-weight: 700; }
+    .lesson-status.done { color: #248b67; background: #e9f7f1; }
+    .lesson-number { margin-top: 12px; color: #9b8ced; font-size: 9px; font-weight: 750; letter-spacing: .6px; text-transform: uppercase; }
+    .lesson-card h3 { margin: 4px 0 5px; font-size: 12px; font-weight: 730; letter-spacing: -.15px; }
+    .lesson-card p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .lesson-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 10px; color: #9299a7; font-size: 9px; }
+    .level { display: flex; align-items: center; gap: 4px; }
+    .level-dot { width: 5px; height: 5px; border-radius: 50%; background: #e4b761; }
+    .level.beginner .level-dot { background: #39b987; }
+    .level.advanced .level-dot { background: #df7691; }
+    .empty-state { grid-column: 1/-1; padding: 34px 12px; border: 1px dashed #dedfeb; border-radius: 11px; color: var(--muted); text-align: center; font-size: 12px; }
+    .footnote { margin-top: 32px; padding-top: 16px; border-top: 1px solid #eceef3; color: #a0a6b2; text-align: center; font-size: 9px; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 10; display: grid; overflow-y: auto; place-items: center; padding: 20px; background: rgba(18, 21, 34, .54); backdrop-filter: blur(4px); }
+    .modal { width: min(590px, 100%); max-height: min(760px, calc(100vh - 40px)); overflow-y: auto; border-radius: 15px; background: white; box-shadow: 0 25px 80px rgba(15, 18, 32, .25); animation: appear .18s ease-out; }
+    @keyframes appear { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .modal-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; gap: 12px; padding: 19px 22px 15px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.96); backdrop-filter: blur(10px); }
+    .modal-kicker { color: var(--purple); font-size: 9px; font-weight: 750; letter-spacing: .8px; text-transform: uppercase; }
+    .modal-head h2 { margin: 5px 0 0; font-size: 20px; letter-spacing: -.5px; }
+    .close-modal { display: grid; width: 31px; height: 31px; flex: 0 0 31px; place-items: center; border: 0; border-radius: 8px; color: #7d8493; background: #f4f5f8; cursor: pointer; font-size: 17px; }
+    .modal-body { padding: 18px 22px 21px; }
+    .modal-description { margin: 0 0 15px; color: #626c7c; font-size: 12px; line-height: 1.75; }
+    .lesson-section-title { margin: 17px 0 8px; font-size: 12px; font-weight: 750; }
+    .lesson-example { overflow-x: auto; margin: 0; padding: 14px 15px; border: 1px solid #292d40; border-radius: 9px; color: #e2e6f1; background: #202334; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; line-height: 1.7; white-space: pre; }
+    .lesson-example .comment { color: #8992a8; }
+    .lesson-example .keyword { color: #c4a8ff; }
+    .lesson-example .string { color: #a9dbb9; }
+    .lesson-example .number { color: #ffd48d; }
+    .lesson-tip { margin-top: 13px; padding: 11px 13px; border-left: 3px solid #a99afd; border-radius: 0 7px 7px 0; color: #686280; background: #f6f4ff; font-size: 10px; line-height: 1.6; }
+    .quiz { padding: 13px; border: 1px solid #eeeafc; border-radius: 9px; background: #faf9ff; }
+    .quiz-question { margin: 0 0 10px; font-size: 11px; font-weight: 700; line-height: 1.5; }
+    .quiz-options { display: grid; gap: 6px; }
+    .quiz-option { padding: 8px 10px; border: 1px solid #ececf1; border-radius: 6px; color: #596273; background: white; cursor: pointer; text-align: left; font-size: 10px; transition: border-color .15s, background .15s; }
+    .quiz-option:hover:not(:disabled) { border-color: #b8adff; }
+    .quiz-option.correct { border-color: #8fd4b8; color: #21815d; background: #f0fbf6; }
+    .quiz-option.incorrect { border-color: #efb4b4; color: #a64e4e; background: #fff5f5; }
+    .quiz-feedback { min-height: 15px; margin-top: 8px; color: #6e7888; font-size: 10px; line-height: 1.5; }
+    .modal-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+    .modal-progress { color: var(--muted); font-size: 10px; }
+    .complete-button { min-height: 35px; padding: 0 13px; border: 0; border-radius: 7px; color: #fff; background: var(--purple); cursor: pointer; font-size: 10px; font-weight: 700; }
+    .complete-button:hover { background: var(--purple-dark); }
+    .complete-button.done { color: #267f62; background: #e9f7f1; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 20; padding: 11px 15px; border-radius: 9px; color: white; background: #202334; box-shadow: var(--shadow); font-size: 11px; animation: appear .18s ease-out; }
+    .hidden { display: none !important; }
+
+    @media (min-width: 1400px) { .content { padding-top: 38px; } }
+    @media (max-width: 1050px) {
+      .sidebar { width: 215px; }
+      .main { margin-left: 215px; }
+      .topbar { padding: 0 28px; }
+      .content { padding-right: 28px; padding-left: 28px; }
+      .lesson-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .sidebar { position: fixed; inset: auto 0 0; width: 100%; height: 58px; flex-direction: row; justify-content: space-around; padding: 5px 7px max(5px, env(safe-area-inset-bottom)); border-top: 1px solid #30354b; }
+      .brand, .nav-label, .sidebar-spacer, .side-card, .sidebar-footer { display: none; }
+      .nav { display: flex; width: 100%; justify-content: space-around; gap: 2px; }
+      .nav-button { display: flex; min-width: 55px; min-height: 45px; flex-direction: column; justify-content: center; gap: 2px; padding: 2px 5px; font-size: 8px; text-align: center; }
+      .nav-button.active { box-shadow: inset 0 2px #927fff; }
+      .nav-icon { font-size: 15px; }
+      .nav-count { display: none; }
+      .main { margin-left: 0; padding-bottom: 61px; }
+      .topbar { height: 57px; padding: 0 15px; }
+      .breadcrumb { font-size: 10px; }
+      .top-actions { gap: 8px; }
+      .search { width: min(40vw, 185px); height: 34px; }
+      .search:focus { width: min(49vw, 230px); }
+      .shortcut { display: none; }
+      .avatar { width: 30px; height: 30px; }
+      .content { padding: 24px 16px 36px; }
+      .intro { margin-bottom: 18px; }
+      .hero { min-height: 202px; grid-template-columns: 1fr 115px; }
+      .hero-copy { padding: 20px 17px; }
+      .hero h2 { font-size: 21px; }
+      .hero-copy p { font-size: 10px; }
+      .hero-visual { overflow: hidden; }
+      .orbit { width: 136px; height: 136px; }
+      .js-tile { width: 65px; height: 65px; border-radius: 14px; font-size: 20px; }
+      .float-code { top: 24px; right: 4px; padding: 6px; font-size: 7px; }
+      .float-dot { bottom: 23px; left: 9px; }
+      .stats { gap: 7px; margin: 12px 0 23px; }
+      .stat { min-height: 65px; gap: 7px; padding: 9px; }
+      .stat-icon { width: 29px; height: 29px; flex-basis: 29px; font-size: 12px; }
+      .stat-value { font-size: 14px; }
+      .stat-label { font-size: 9px; }
+      .continue-card { grid-template-columns: 38px 1fr auto; gap: 9px; padding: 12px; }
+      .continue-icon { width: 36px; height: 36px; }
+      .continue-bar-wrap { display: none; }
+      .button-continue { padding: 0 9px; font-size: 9px; }
+      .curriculum { margin-top: 25px; }
+      .lesson-grid { gap: 9px; }
+      .lesson-card { min-height: 157px; padding: 11px; }
+    }
+    @media (max-width: 430px) {
+      .hero { grid-template-columns: 1fr 87px; }
+      .hero-copy { padding: 17px 13px; }
+      .hero h2 { font-size: 19px; }
+      .hero-visual .orbit { width: 110px; height: 110px; }
+      .hero-visual .js-tile { width: 54px; height: 54px; font-size: 17px; }
+      .float-code { right: 0; font-size: 6px; }
+      .section-heading h2 { font-size: 15px; }
+      .lesson-grid { grid-template-columns: 1fr; }
+      .lesson-card { min-height: 145px; }
+      .filter-list { gap: 6px; }
+      .filter { padding: 0 9px; font-size: 9px; }
+      .modal-backdrop { padding: 10px; }
+      .modal { max-height: calc(100vh - 20px); }
+      .modal-head, .modal-body { padding-right: 16px; padding-left: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#" aria-label="Script School home">
+        <span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>
+        <span class="brand-name">script<span>school</span></span>
+      </a>
+      <p class="nav-label">Learning space</p>
+      <nav class="nav" aria-label="Learning space">
+        <button class="nav-button active" type="button" data-view="overview"><span class="nav-icon" aria-hidden="true">⌂</span>Overview</button>
+        <button class="nav-button" type="button" data-view="all"><span class="nav-icon" aria-hidden="true">▤</span>All lessons<span class="nav-count" id="nav-total">0</span></button>
+        <button class="nav-button" type="button" data-view="continue"><span class="nav-icon" aria-hidden="true">▷</span>Continue learning</button>
+        <button class="nav-button" type="button" data-view="completed"><span class="nav-icon" aria-hidden="true">✓</span>Completed<span class="nav-count" id="nav-completed">0</span></button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="side-card">
+        <div class="side-card-top"><span>Your learning journey</span><span class="streak-badge">✦ <span id="streak-days">0</span> done</span></div>
+        <p id="sidebar-progress-copy">Every expert started with their first line of code.</p>
+        <div class="side-progress" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="sidebar-progress"></span></div>
+      </div>
+      <div class="sidebar-footer">A little JavaScript, every day ✨</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb"><span>My learning</span><span aria-hidden="true">/</span><strong id="breadcrumb-current">Overview</strong></div>
+        <div class="top-actions">
+          <label class="search-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input class="search" id="search" type="search" placeholder="Search concepts..." aria-label="Search JavaScript lessons">
+            <kbd class="shortcut" aria-hidden="true">Ctrl K</kbd>
+          </label>
+          <button class="avatar" type="button" aria-label="Your learning profile">JS</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <p class="welcome-line">YOUR NEXT CHAPTER STARTS HERE</p>
+        <h1>Hey there, future developer <span aria-hidden="true">✦</span></h1>
+        <p class="intro">A friendly, hands-on path from your first variable to confidently building for the web.</p>
+
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <span class="eyebrow"><span aria-hidden="true">✦</span> YOUR JAVASCRIPT JOURNEY</span>
+            <h2 id="hero-title">Big ideas. Small steps. Real skills.</h2>
+            <p>Explore the language that brings the web to life—one clear concept at a time.</p>
+            <button class="button-primary" id="start-button" type="button">Start learning <span aria-hidden="true">→</span></button>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="orbit"></div>
+            <div class="js-tile">JS</div>
+            <div class="float-code">const future = "you";</div>
+            <div class="float-dot"></div>
+          </div>
+        </section>
+
+        <section class="stats" aria-label="Your course statistics">
+          <div class="stat"><div class="stat-icon" aria-hidden="true">▤</div><div><div class="stat-value" id="stat-lessons">0</div><div class="stat-label">Bite-sized lessons</div></div></div>
+          <div class="stat"><div class="stat-icon" aria-hidden="true">⚡</div><div><div class="stat-value" id="stat-minutes">~5 hrs</div><div class="stat-label">Learn at your own pace</div></div></div>
+          <div class="stat"><div class="stat-icon" aria-hidden="true">◉</div><div><div class="stat-value" id="stat-progress">0%</div><div class="stat-label">Course completed</div></div></div>
+        </section>
+
+        <section id="continue-section" aria-labelledby="continue-heading">
+          <div class="section-heading">
+            <div><h2 id="continue-heading">Pick up where you left off</h2><p>Your next step is ready when you are.</p></div>
+            <button class="text-button" id="continue-link" type="button">See all lessons →</button>
+          </div>
+          <div class="continue-card">
+            <div class="continue-icon" aria-hidden="true">✎</div>
+            <div><div class="continue-title" id="continue-title">Your first JavaScript</div><div class="continue-meta" id="continue-meta">Lesson 01 · Getting started</div></div>
+            <div class="continue-bar-wrap"><div class="continue-bar" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="continue-progress"></span></div><div class="continue-caption" id="continue-caption">0 / 24 completed</div></div>
+            <button class="button-continue" id="continue-button" type="button">Open lesson <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="curriculum" id="curriculum-section" aria-labelledby="curriculum-heading">
+          <div class="section-heading curriculum-head">
+            <div><h2 id="curriculum-heading">Explore the curriculum</h2><p>Build a strong foundation, then go further.</p></div>
+            <button class="text-button" id="reset-filter" type="button">Reset filters</button>
+          </div>
+          <div class="filter-list" id="filters" role="group" aria-label="Filter lessons by topic"></div>
+          <div class="lesson-grid" id="lesson-grid" aria-live="polite"></div>
+        </section>
+        <footer class="footnote">Made for curious minds. Keep experimenting, keep learning. 🌱</footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-backdrop" role="presentation">
+    <section class="modal" id="lesson-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
+      <header class="modal-head">
+        <div><div class="modal-kicker" id="modal-kicker">Lesson 01 · Core</div><h2 id="modal-title">Your first JavaScript</h2></div>
+        <button class="close-modal" id="close-modal" type="button" aria-label="Close lesson">×</button>
+      </header>
+      <div class="modal-body">
+        <p class="modal-description" id="modal-description"></p>
+        <h3 class="lesson-section-title">See it in action</h3>
+        <pre class="lesson-example"><code id="modal-code"></code></pre>
+        <div class="lesson-tip" id="modal-tip"></div>
+        <h3 class="lesson-section-title">Quick check</h3>
+        <div class="quiz"><p class="quiz-question" id="quiz-question"></p><div class="quiz-options" id="quiz-options"></div><div class="quiz-feedback" id="quiz-feedback" aria-live="polite"></div></div>
+        <div class="modal-footer"><span class="modal-progress" id="modal-progress"></span><button class="complete-button" id="complete-button" type="button">Mark as complete ✓</button></div>
+      </div>
+    </section>
+  </div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+
+    const lessons = [
+      { id: "first-steps", title: "Your first JavaScript", category: "Core", icon: "✎", duration: 7, level: "Beginner", description: "Meet JavaScript, discover where it runs, and write your very first line of code.", explanation: "JavaScript is a programming language that makes webpages interactive. You can run it right in your browser. The console is a friendly place to try an idea and see the result immediately.", code: '// Say hello to the console!\nconsole.log("Hello, world!");\n\n// JavaScript powers interactive websites.', quiz: "Which built-in function prints a message to the browser console?", options: ["console.log()", "print.console()", "showMessage()"], answer: 0, tip: "Open your browser's developer tools and find the Console tab to try this yourself." },
+      { id: "variables", title: "Variables & values", category: "Core", icon: "▱", duration: 8, level: "Beginner", description: "Store and name information with let and const, and choose the right one for the job.", explanation: "Variables give useful names to values. Use const when the binding won't be reassigned, and let when it will. Prefer const by default: it makes your code's intent easier to understand.", code: 'const name = "Ada";\nlet score = 0;\n\nscore = score + 1;\nconsole.log(name, score);', quiz: "Which keyword should you usually try first when declaring a variable?", options: ["var", "const", "mutable"], answer: 1, tip: "const prevents reassignment of a binding; for objects and arrays, their contents can still change." },
+      { id: "types", title: "Data types", category: "Core", icon: "◈", duration: 8, level: "Beginner", description: "Get to know strings, numbers, booleans, null, undefined, and JavaScript's dynamic types.", explanation: "Every JavaScript value has a type. Common primitive types include string, number, boolean, undefined, null, bigint, and symbol. Use typeof to inspect most values while learning.", code: 'const message = "Hi!";  // string\nconst age = 25;         // number\nconst ready = true;     // boolean\nlet later;              // undefined\n\nconsole.log(typeof age);', quiz: "What is the type of the value true?", options: ["String", "Number", "Boolean"], answer: 2, tip: "JavaScript has one number type for both whole numbers and decimals." },
+      { id: "operators", title: "Operators & expressions", category: "Core", icon: "±", duration: 8, level: "Beginner", description: "Calculate, compare, and combine values using JavaScript's everyday operators.", explanation: "Operators transform or compare values. Arithmetic operators include +, -, *, and /. Comparisons return booleans, and logical operators help combine conditions. Use === for strict equality.", code: 'const subtotal = 12 + 8;\nconst hasDiscount = subtotal >= 20;\nconst total = hasDiscount ? subtotal - 2 : subtotal;\n\nconsole.log(total); // 18', quiz: "What does the strict equality operator === check?", options: ["Only whether values look similar", "Whether type and value are equal", "Whether a value is greater"], answer: 1, tip: "Strict equality avoids automatic type conversion, which helps prevent surprising comparisons." },
+      { id: "truthy-falsy", title: "Truthy & falsy values", category: "Core", icon: "◐", duration: 7, level: "Beginner", description: "Learn how JavaScript evaluates values in conditions and choose clear defaults.", explanation: "In a condition, values are converted to booleans. false, 0, an empty string, null, undefined, and NaN are falsy; most other values are truthy—including empty arrays and objects.", code: 'const username = "";\nconst displayName = username || "Guest";\n\nif (displayName) {\n  console.log(`Welcome, ${displayName}!`);\n}', quiz: "Which value is falsy in JavaScript?", options: ["[]", "{}", "0"], answer: 2, tip: "Use ?? when you only want a default for null or undefined; || also replaces other falsy values like 0." },
+      { id: "strings", title: "Strings & template literals", category: "Core", icon: "❝", duration: 7, level: "Beginner", description: "Work with text, useful string methods, and readable template literals.", explanation: "Strings hold text. Template literals use backticks and ${...} to insert expressions, making it easier to combine a sentence and dynamic values.", code: 'const learner = "Sam";\nconst topic = "JavaScript";\nconst greeting = `Hi ${learner},\nlet’s learn ${topic}!`;\n\nconsole.log(greeting);', quiz: "Which characters wrap a JavaScript template literal?", options: ["Single quotes ' '", "Backticks ` `", "Parentheses ( )"], answer: 1, tip: "Template literals can span multiple lines without special newline characters." },
+      { id: "conditionals", title: "Making decisions", category: "Control flow", icon: "⑂", duration: 8, level: "Beginner", description: "Choose what your program does next with if, else, and switch.", explanation: "Conditionals run different code depending on whether a condition is truthy. Use if and else for decisions, and switch when comparing one value against several specific cases.", code: 'const temperature = 23;\n\nif (temperature > 30) {\n  console.log("Stay cool!");\n} else {\n  console.log("Enjoy the day!");\n}', quiz: "Which block runs when an if condition is false?", options: ["The else block", "The const block", "The return block"], answer: 0, tip: "Keep conditions readable: a clearly named boolean can be easier to understand than a long expression." },
+      { id: "loops", title: "Loops & iteration", category: "Control flow", icon: "⟳", duration: 9, level: "Beginner", description: "Repeat work with for and while loops, and know when a loop should stop.", explanation: "Loops repeat code while a condition is true. A for loop is handy when you know how to step through work; a while loop is useful when repetition depends on a condition. Make sure the condition eventually changes.", code: 'const colors = ["blue", "gold", "teal"];\n\nfor (const color of colors) {\n  console.log(color);\n}', quiz: "What should eventually happen for a while loop to finish?", options: ["Its condition becomes false", "It sees an array", "It calls console.log"], answer: 0, tip: "for...of is an easy way to visit each item in an iterable such as an array." },
+      { id: "arrays", title: "Arrays & lists", category: "Data", icon: "▦", duration: 9, level: "Beginner", description: "Collect values into ordered arrays and get comfortable with indexes and useful methods.", explanation: "Arrays keep an ordered list of values. They are zero-indexed, so the first item is at index 0. Common tools include push, includes, slice, and length.", code: 'const fruits = ["pear", "mango"];\nfruits.push("plum");\n\nconsole.log(fruits[0]);       // "pear"\nconsole.log(fruits.length);   // 3', quiz: "What index is used for the first item in an array?", options: ["1", "0", "-1"], answer: 1, tip: "Arrays can grow and shrink even when declared with const; const keeps the variable binding in place." },
+      { id: "objects", title: "Objects & properties", category: "Data", icon: "◫", duration: 9, level: "Beginner", description: "Model real things with objects, key-value pairs, and property access.", explanation: "Objects group related information into properties. Dot notation is great for known property names; bracket notation is useful when the property name is stored in a variable.", code: 'const book = {\n  title: "Small Steps",\n  pages: 120\n};\n\nconsole.log(book.title);\nbook.pages = 128;', quiz: "How do you access a property named title on book?", options: ["book->title", "book.title", "title.book"], answer: 1, tip: "Objects are a core way to represent structured data in JavaScript." },
+      { id: "map-set", title: "Map & Set collections", category: "Data", icon: "▧", duration: 9, level: "Intermediate", description: "Use Map for key-value collections and Set for unique values.", explanation: "Map stores key-value pairs and preserves insertion order; keys can be any value. Set stores unique values, which makes it useful for removing duplicates or checking membership.", code: 'const tags = new Set(["js", "web", "js"]);\nconst scores = new Map();\nscores.set("Ada", 95);\n\nconsole.log(tags.size);       // 2\nconsole.log(scores.get("Ada")); // 95', quiz: "Which collection automatically keeps only unique values?", options: ["Set", "Map", "Array"], answer: 0, tip: "Choose Map when keys aren't naturally object property names, or when you need convenient size and iteration." },
+      { id: "json", title: "JSON & data exchange", category: "Data", icon: "{ }", duration: 7, level: "Beginner", description: "Represent data as JSON and convert it to and from JavaScript values.", explanation: "JSON is a text format for exchanging structured data. JSON.stringify converts a JavaScript value to JSON text; JSON.parse converts valid JSON text back into a value.", code: 'const user = { name: "Mina", active: true };\nconst text = JSON.stringify(user);\nconst restored = JSON.parse(text);\n\nconsole.log(restored.name); // "Mina"', quiz: "Which method converts JSON text into a JavaScript value?", options: ["JSON.parse()", "JSON.stringify()", "JSON.convert()"], answer: 0, tip: "JSON doesn't support every JavaScript value—functions and undefined are not represented as JSON." },
+      { id: "functions", title: "Functions & parameters", category: "Functions", icon: "ƒ", duration: 9, level: "Beginner", description: "Bundle reusable actions into functions, pass in parameters, and return results.", explanation: "Functions package a task so you can reuse it. Parameters are the names in the function definition; arguments are the values passed when you call it. return sends a result back to the caller.", code: 'function greet(name) {\n  return `Hello, ${name}!`;\n}\n\nconst message = greet("Rae");\nconsole.log(message);', quiz: "What does return do inside a function?", options: ["Sends a result back to the caller", "Repeats the function forever", "Declares a new array"], answer: 0, tip: "A focused function with a clear name is easier to reuse and test." },
+      { id: "arrow-functions", title: "Arrow functions", category: "Functions", icon: "↗", duration: 8, level: "Beginner", description: "Write concise function expressions and learn where arrow functions fit best.", explanation: "Arrow functions provide a compact way to write function expressions. When the body is a single expression, parentheses and an implicit return can make a short transformation easy to read.", code: 'const double = (number) => number * 2;\nconst numbers = [1, 2, 3];\nconst doubled = numbers.map(double);\n\nconsole.log(doubled); // [2, 4, 6]', quiz: "What is returned by this arrow function: n => n * 2?", options: ["The value of n times 2", "Always undefined", "A function name"], answer: 0, tip: "Arrow functions don't create their own this; keep this behavior in mind for object methods." },
+      { id: "scope", title: "Scope & closures", category: "Functions", icon: "◎", duration: 9, level: "Intermediate", description: "Understand where names are available, block scope, and functions that remember.", explanation: "Scope determines where a variable can be used. let and const are block-scoped. A closure happens when a function keeps access to variables from the scope where it was created.", code: 'function makeCounter() {\n  let count = 0;\n  return () => ++count;\n}\n\nconst next = makeCounter();\nconsole.log(next()); // 1\nconsole.log(next()); // 2', quiz: "What lets the returned function remember count?", options: ["A closure", "A loop", "A type conversion"], answer: 0, tip: "Closures are useful for creating private state and functions with a little bit of remembered context." },
+      { id: "array-methods", title: "Transforming arrays", category: "Data", icon: "⤴", duration: 9, level: "Intermediate", description: "Use map, filter, and reduce to turn collections into the results you need.", explanation: "map transforms every item into a new array, filter keeps items that match a test, and reduce combines items into a single result. These methods make data transformations expressive.", code: 'const scores = [8, 12, 15, 6];\nconst passing = scores.filter(score => score >= 10);\nconst doubled = passing.map(score => score * 2);\n\nconsole.log(doubled); // [24, 30]', quiz: "Which array method creates a new array with transformed items?", options: ["map()", "filter()", "findIndex()"], answer: 0, tip: "Each callback receives the current item, and can also receive its index and the original array." },
+      { id: "errors", title: "Errors & debugging", category: "Core", icon: "⌁", duration: 8, level: "Beginner", description: "Read error messages, handle exceptions, and debug with confidence.", explanation: "Errors are clues. Read the error type and stack trace, then inspect the values near the reported line. try...catch handles an exception when you can take a useful recovery action.", code: 'try {\n  JSON.parse("{bad json}");\n} catch (error) {\n  console.error("Could not read data:", error.message);\n}', quiz: "Where does a caught error become available?", options: ["The catch block parameter", "The if condition", "The finally keyword"], answer: 0, tip: "Avoid catching errors you can't meaningfully handle; an error visible in development is easier to fix." },
+      { id: "dom", title: "Meet the DOM", category: "DOM", icon: "▣", duration: 9, level: "Beginner", description: "Explore how the browser represents a page and find elements with JavaScript.", explanation: "The Document Object Model (DOM) is the browser's object-based representation of your page. Use querySelector to find an element, then inspect or update it.", code: 'const heading = document.querySelector("h1");\n\nif (heading) {\n  heading.textContent = "Hello, DOM!";\n}', quiz: "Which method is commonly used to find the first matching page element?", options: ["document.querySelector()", "document.findFirst()", "window.getMarkup()"], answer: 0, tip: "Check that an element was found before trying to update it." },
+      { id: "events", title: "Events & interaction", category: "DOM", icon: "☝", duration: 9, level: "Beginner", description: "Listen for clicks, keyboard input, and other events to bring a page to life.", explanation: "Events tell your code that something happened. addEventListener attaches a function that runs when the selected event occurs, such as a click or a form submission.", code: 'const button = document.querySelector("button");\n\nbutton?.addEventListener("click", () => {\n  console.log("Thanks for clicking!");\n});', quiz: "Which method attaches an event handler to an element?", options: ["addEventListener()", "listenFor()", "onEventOnly()"], answer: 0, tip: "For forms, handle the submit event and call preventDefault() when you need to manage the submission yourself." },
+      { id: "dom-build", title: "Update the page", category: "DOM", icon: "✧", duration: 9, level: "Intermediate", description: "Create elements and update a webpage safely and accessibly.", explanation: "You can create DOM elements with createElement, set their textContent, and append them to the page. For plain text, textContent is a safer choice than interpreting a string as HTML.", code: 'const item = document.createElement("li");\nitem.textContent = "Practice JavaScript";\n\ndocument.querySelector("ul")?.append(item);', quiz: "Which property sets an element's plain text content?", options: ["textContent", "htmlText", "innerCode"], answer: 0, tip: "Use textContent for user-provided text rather than inserting it as HTML." },
+      { id: "modules", title: "Modules & imports", category: "Modern JS", icon: "⬡", duration: 8, level: "Intermediate", description: "Split code into reusable files with export and import.", explanation: "ES modules let you organize code into files. Export the values a file shares; import them where they're needed. In the browser, modules use type=\"module\" on a script element.", code: '// math.js\nexport const add = (a, b) => a + b;\n\n// app.js\nimport { add } from "./math.js";\nconsole.log(add(2, 3));', quiz: "Which keyword shares a named value from a module?", options: ["export", "share", "public"], answer: 0, tip: "Modules run in strict mode and support a clean, explicit dependency structure." },
+      { id: "destructuring", title: "Destructuring & spread", category: "Modern JS", icon: "⤢", duration: 8, level: "Intermediate", description: "Pull values out of objects and arrays, and make useful copies with spread.", explanation: "Destructuring gives values from objects or arrays convenient names. The spread syntax (...) expands iterable values or copies enumerable object properties into a new object.", code: 'const user = { name: "Jo", level: 3 };\nconst { name, level } = user;\nconst upgraded = { ...user, level: level + 1 };\n\nconsole.log(name, upgraded.level);', quiz: "How can spread help make a shallow copy of an object?", options: ["{ ...original }", "copy(original)", "original => copy"], answer: 0, tip: "Spread makes a shallow copy; nested objects are still shared references." },
+      { id: "promises", title: "Promises", category: "Async", icon: "◌", duration: 9, level: "Intermediate", description: "Understand pending, fulfilled, and rejected work that finishes later.", explanation: "A Promise represents a value that may be available in the future. It can be pending, fulfilled, or rejected. Use then and catch to react to its outcome, or await it inside an async function.", code: 'fetch("/api/hello")\n  .then(response => response.json())\n  .then(data => console.log(data))\n  .catch(error => console.error(error));', quiz: "Which Promise state represents a successful result?", options: ["Fulfilled", "Waiting", "Pending only"], answer: 0, tip: "A promise can settle once: it either fulfills with a value or rejects with a reason." },
+      { id: "async-await", title: "Async & await", category: "Async", icon: "⇢", duration: 9, level: "Intermediate", description: "Write clear asynchronous code with async functions and await.", explanation: "An async function always returns a Promise. Inside it, await pauses that function until the awaited promise settles, letting asynchronous steps read in a natural order.", code: 'async function loadMessage() {\n  try {\n    const response = await fetch("/api/hello");\n    const data = await response.json();\n    console.log(data);\n  } catch (error) {\n    console.error("Loading failed:", error);\n  }\n}', quiz: "What does an async function always return?", options: ["A Promise", "A DOM element", "A loop"], answer: 0, tip: "Use try...catch around awaited work when you want to handle a rejected promise." },
+      { id: "event-loop", title: "The event loop", category: "Async", icon: "⟳", duration: 9, level: "Intermediate", description: "See how synchronous code, callbacks, and promises take turns in the browser.", explanation: "JavaScript runs synchronous work on a call stack. The event loop coordinates that work with browser tasks. Promise callbacks (microtasks) run after the current stack clears and before the next task, such as a timer callback.", code: 'console.log("first");\nsetTimeout(() => console.log("timer"), 0);\nPromise.resolve().then(() => console.log("promise"));\nconsole.log("last");\n// first → last → promise → timer', quiz: "After the synchronous code finishes, which callback runs first?", options: ["Promise callback", "Timer callback", "They both run before synchronous code"], answer: 0, tip: "A timer with a delay of 0 is scheduled for a later task; it does not interrupt the current code." },
+      { id: "fetch", title: "Fetch & APIs", category: "Async", icon: "⇄", duration: 9, level: "Intermediate", description: "Request data from an API and work with HTTP responses and JSON.", explanation: "fetch sends an HTTP request and returns a Promise for a Response. Check response.ok before reading the body: HTTP errors like 404 do not automatically reject the fetch promise.", code: 'async function loadItems() {\n  const response = await fetch("/api/items");\n  if (!response.ok) {\n    throw new Error(`HTTP ${response.status}`);\n  }\n  const items = await response.json();\n  console.log(items);\n}\n\nloadItems();', quiz: "Does fetch automatically reject for an HTTP 404 response?", options: ["Yes, every non-200 rejects", "No, check response.ok", "Only when parsing JSON"], answer: 1, tip: "Network errors reject fetch; most HTTP error status codes still return a Response." },
+      { id: "classes", title: "Classes & prototypes", category: "Modern JS", icon: "♧", duration: 9, level: "Intermediate", description: "Learn how JavaScript objects share behavior with prototypes and class syntax.", explanation: "JavaScript objects can inherit properties through their prototype chain. class syntax provides a familiar way to define constructors and methods, while still using prototypes underneath.", code: 'class Pet {\n  constructor(name) {\n    this.name = name;\n  }\n  speak() {\n    return `${this.name} says hi!`;\n  }\n}\n\nconsole.log(new Pet("Mochi").speak());', quiz: "In JavaScript, class methods are generally placed on what?", options: ["The class prototype", "The browser console", "A global variable"], answer: 0, tip: "Reach for classes when they help explain your model, not just to wrap every function." },
+      { id: "this", title: "The this keyword", category: "Functions", icon: "◉", duration: 8, level: "Intermediate", description: "Understand how call-site and arrow-function rules determine this.", explanation: "In a regular function, this generally depends on how the function is called. A method call such as object.method() sets this to object. Arrow functions instead capture this from their surrounding scope.", code: 'const player = {\n  name: "Kai",\n  sayName() {\n    return this.name;\n  }\n};\n\nconsole.log(player.sayName()); // "Kai"', quiz: "In player.sayName(), what is this inside a regular sayName method?", options: ["player", "The return value", "Always window"], answer: 0, tip: "A detached method call loses its receiver; think about the call site when this surprises you." },
+      { id: "storage", title: "Browser storage", category: "DOM", icon: "▣", duration: 8, level: "Intermediate", description: "Keep small bits of browser data across visits using localStorage.", explanation: "localStorage stores string values in the browser and keeps them across sessions. Convert structured values to and from JSON, and avoid storing sensitive information in client-side storage.", code: 'const settings = { theme: "light" };\nlocalStorage.setItem("settings", JSON.stringify(settings));\n\nconst saved = localStorage.getItem("settings");\nconst restored = saved ? JSON.parse(saved) : null;', quiz: "What kind of values does localStorage store?", options: ["Strings", "Functions", "DOM elements"], answer: 0, tip: "Storage may be unavailable or contain invalid data, so consider error handling in production code." },
+      { id: "tooling", title: "Modules, npm & tooling", category: "Modern JS", icon: "⌘", duration: 9, level: "Intermediate", description: "See how package managers, development tools, and browser devtools support real projects.", explanation: "As projects grow, tools help install packages, run scripts, lint code, and build for deployment. npm is the package manager included with Node.js. Browser developer tools help inspect code and diagnose issues.", code: '// In a project with a package.json:\n// npm install\n// npm run dev\n\nconsole.log("Build, test, and inspect as you learn.");', quiz: "Which package manager is commonly distributed with Node.js?", options: ["npm", "DOM", "JSON"], answer: 0, tip: "You can learn JavaScript fundamentals directly in the browser before adopting any build tools." }
+    ];
+
+    function validateLessons(catalog) {
+      const ids = new Set();
+      catalog.forEach((lesson, index) => {
+        if (!lesson.id || ids.has(lesson.id)) {
+          throw new Error(`Lesson ${index + 1} must have a unique id.`);
+        }
+        if (!lesson.title || !lesson.category || !lesson.description || !lesson.explanation || !lesson.code || !lesson.tip) {
+          throw new Error(`Lesson "${lesson.id}" is missing required content.`);
+        }
+        if (!Number.isFinite(lesson.duration) || lesson.duration <= 0) {
+          throw new Error(`Lesson "${lesson.id}" must have a positive duration.`);
+        }
+        if (!Array.isArray(lesson.options) || lesson.options.length < 2 ||
+            !Number.isInteger(lesson.answer) || lesson.answer < 0 || lesson.answer >= lesson.options.length) {
+          throw new Error(`Lesson "${lesson.id}" must have a valid quiz and answer.`);
+        }
+        ids.add(lesson.id);
+      });
+      if (catalog.length === 0) throw new Error("The lesson catalog cannot be empty.");
+    }
+
+    validateLessons(lessons);
+    const lessonById = new Map(lessons.map(lesson => [lesson.id, lesson]));
+    const lessonNumberById = new Map(lessons.map((lesson, index) => [lesson.id, index + 1]));
+    const categoryCounts = new Map();
+    lessons.forEach(lesson => categoryCounts.set(lesson.category, (categoryCounts.get(lesson.category) || 0) + 1));
+    const categories = ["All topics", ...new Set(lessons.map(lesson => lesson.category))];
+    const storageKey = "script-school-progress-v1";
+    let progress = loadProgress();
+    let activeCategory = "All topics";
+    let activeView = "overview";
+    let currentLessonId = null;
+    let selectedAnswer = false;
+    let toastTimeout;
+    let returnFocusTarget = null;
+
+    const grid = document.getElementById("lesson-grid");
+    const searchInput = document.getElementById("search");
+    const filters = document.getElementById("filters");
+    const modalBackdrop = document.getElementById("modal-backdrop");
+
+    function loadProgress() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(storageKey) || "{}");
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+        return Object.fromEntries(
+          Object.entries(parsed).filter(([id, completed]) => lessonById.has(id) && completed === true)
+        );
+      } catch (error) {
+        console.warn("Could not read saved learning progress.", error);
+        return {};
+      }
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(progress));
+      } catch (error) {
+        console.warn("Could not save learning progress.", error);
+        showToast("Progress could not be saved on this device.");
+      }
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function renderFilters() {
+      filters.innerHTML = categories.map(category => {
+        const count = category === "All topics" ? lessons.length : categoryCounts.get(category);
+        return `<button class="filter${activeCategory === category ? " active" : ""}" type="button" data-category-filter="${escapeHTML(category)}" aria-pressed="${activeCategory === category}">${escapeHTML(category)} <span>${count}</span></button>`;
+      }).join("");
+    }
+
+    function renderLessons() {
+      const query = searchInput.value.trim().toLowerCase();
+      const shown = lessons.filter(lesson => {
+        const categoryMatches = activeCategory === "All topics" || lesson.category === activeCategory;
+        const queryMatches = !query || `${lesson.title} ${lesson.category} ${lesson.description} ${lesson.level}`.toLowerCase().includes(query);
+        const isComplete = Boolean(progress[lesson.id]);
+        const completionMatches = activeView === "completed" ? isComplete : activeView !== "continue" || !isComplete;
+        return categoryMatches && queryMatches && completionMatches;
+      });
+      if (shown.length === 0) {
+        const emptyMessage = activeView === "completed" && !query
+          ? "No completed lessons just yet. Every journey starts with one!"
+          : activeView === "continue" && !query
+            ? "You’re all caught up. Choose a lesson to review!"
+            : "No lessons match that search. Try another topic or keyword.";
+        grid.innerHTML = `<div class="empty-state">${escapeHTML(emptyMessage)}</div>`;
+        return;
+      }
+      grid.innerHTML = shown.map(lesson => {
+        const complete = Boolean(progress[lesson.id]);
+        const levelClass = lesson.level.toLowerCase();
+        return `<button class="lesson-card" type="button" data-lesson-id="${escapeHTML(lesson.id)}" data-category="${escapeHTML(lesson.category)}" aria-label="Open lesson: ${escapeHTML(lesson.title)}">
+          <span class="lesson-top"><span class="lesson-icon" aria-hidden="true">${lesson.icon}</span><span class="lesson-status${complete ? " done" : ""}">${complete ? "✓ DONE" : "● READY"}</span></span>
+          <span class="lesson-number">LESSON ${String(lessonNumberById.get(lesson.id)).padStart(2, "0")} · ${escapeHTML(lesson.category)}</span>
+          <h3>${escapeHTML(lesson.title)}</h3><p>${escapeHTML(lesson.description)}</p>
+          <span class="lesson-bottom"><span>${lesson.duration} min</span><span class="level ${levelClass}"><span class="level-dot"></span>${escapeHTML(lesson.level)}</span></span>
+        </button>`;
+      }).join("");
+    }
+
+    function updateCurriculumLabels() {
+      const query = searchInput.value.trim();
+      const heading = activeView === "completed"
+        ? "Your completed lessons"
+        : activeView === "continue"
+          ? "Continue learning"
+          : activeCategory !== "All topics"
+            ? `${activeCategory} lessons`
+            : query
+              ? "Search results"
+              : "Explore the curriculum";
+      const breadcrumb = activeView === "completed"
+        ? "Completed"
+        : activeView === "continue"
+          ? "Continue learning"
+          : activeCategory !== "All topics"
+            ? activeCategory
+            : query
+              ? "Search results"
+              : activeView === "overview"
+                ? "Overview"
+                : "All lessons";
+      document.getElementById("breadcrumb-current").textContent = breadcrumb;
+      document.getElementById("curriculum-heading").textContent = heading;
+    }
+
+    function updateDashboard() {
+      const completed = lessons.filter(lesson => progress[lesson.id]).length;
+      const percentage = lessons.length ? Math.round((completed / lessons.length) * 100) : 0;
+      const totalMinutes = lessons.reduce((total, lesson) => total + lesson.duration, 0);
+      document.getElementById("stat-lessons").textContent = lessons.length;
+      document.getElementById("stat-minutes").textContent = `~${Math.ceil(totalMinutes / 60)} hrs`;
+      document.getElementById("nav-total").textContent = lessons.length;
+      document.getElementById("nav-completed").textContent = completed;
+      document.getElementById("streak-days").textContent = completed;
+      document.getElementById("stat-progress").textContent = `${percentage}%`;
+      document.getElementById("sidebar-progress").style.width = `${percentage}%`;
+      document.querySelector(".side-progress").setAttribute("aria-valuenow", percentage);
+      document.getElementById("sidebar-progress-copy").textContent = completed
+        ? `${completed} of ${lessons.length} lessons complete. Keep that momentum going!`
+        : "Every expert started with their first line of code.";
+      document.getElementById("continue-progress").style.width = `${percentage}%`;
+      document.querySelector(".continue-bar-wrap .continue-bar").setAttribute("aria-valuenow", percentage);
+      document.getElementById("continue-caption").textContent = `${completed} / ${lessons.length} completed`;
+
+      const nextLesson = lessons.find(lesson => !progress[lesson.id]) || lessons[0];
+      document.getElementById("continue-title").textContent = completed === lessons.length ? "Revisit any lesson" : nextLesson.title;
+      document.getElementById("continue-meta").textContent = `Lesson ${String(lessonNumberById.get(nextLesson.id)).padStart(2, "0")} · ${nextLesson.category}`;
+      document.getElementById("continue-button").dataset.lessonId = nextLesson.id;
+      document.getElementById("continue-button").innerHTML = `${completed === lessons.length ? "Review lesson" : "Open lesson"} <span aria-hidden="true">→</span>`;
+      document.getElementById("start-button").dataset.lessonId = nextLesson.id;
+      renderLessons();
+    }
+
+    function openLesson(id) {
+      const lesson = lessonById.get(id);
+      if (!lesson) return;
+      returnFocusTarget = document.activeElement;
+      currentLessonId = id;
+      selectedAnswer = false;
+      document.getElementById("modal-kicker").textContent = `Lesson ${String(lessonNumberById.get(lesson.id)).padStart(2, "0")} · ${lesson.category} · ${lesson.duration} min`;
+      document.getElementById("modal-title").textContent = lesson.title;
+      document.getElementById("modal-description").textContent = lesson.explanation;
+      document.getElementById("modal-code").textContent = lesson.code;
+      document.getElementById("modal-tip").textContent = `A small tip: ${lesson.tip}`;
+      document.getElementById("quiz-question").textContent = lesson.quiz;
+      document.getElementById("quiz-feedback").textContent = "";
+      document.getElementById("quiz-options").innerHTML = lesson.options.map((option, index) =>
+        `<button class="quiz-option" type="button" data-answer="${index}">${escapeHTML(option)}</button>`
+      ).join("");
+      document.getElementById("modal-progress").textContent = `Lesson ${lessonNumberById.get(lesson.id)} of ${lessons.length}`;
+      const completeButton = document.getElementById("complete-button");
+      completeButton.classList.toggle("done", Boolean(progress[id]));
+      completeButton.textContent = progress[id] ? "Completed ✓" : "Mark as complete ✓";
+      modalBackdrop.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      document.getElementById("close-modal").focus();
+    }
+
+    function closeLesson() {
+      modalBackdrop.classList.add("hidden");
+      document.body.style.overflow = "";
+      currentLessonId = null;
+      if (returnFocusTarget instanceof HTMLElement && returnFocusTarget.isConnected) returnFocusTarget.focus();
+      returnFocusTarget = null;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.remove("hidden");
+      window.clearTimeout(toastTimeout);
+      toastTimeout = window.setTimeout(() => toast.classList.add("hidden"), 2600);
+    }
+
+    function setView(view) {
+      activeView = view;
+      document.querySelectorAll(".nav-button").forEach(button => {
+        button.classList.toggle("active", button.dataset.view === view);
+      });
+      updateCurriculumLabels();
+      document.getElementById(view === "continue" ? "continue-section" : "curriculum-section").scrollIntoView({ behavior: "smooth", block: "start" });
+      renderLessons();
+    }
+
+    filters.addEventListener("click", event => {
+      const button = event.target.closest("[data-category-filter]");
+      if (!button) return;
+      activeCategory = button.dataset.categoryFilter;
+      activeView = "all";
+      document.querySelectorAll(".nav-button").forEach(navButton => {
+        navButton.classList.toggle("active", navButton.dataset.view === "all");
+      });
+      updateCurriculumLabels();
+      renderFilters();
+      renderLessons();
+    });
+
+    grid.addEventListener("click", event => {
+      const card = event.target.closest("[data-lesson-id]");
+      if (card) openLesson(card.dataset.lessonId);
+    });
+
+    searchInput.addEventListener("input", () => {
+      activeView = "all";
+      document.querySelectorAll(".nav-button").forEach(button => button.classList.toggle("active", button.dataset.view === "all"));
+      updateCurriculumLabels();
+      renderLessons();
+    });
+
+    document.querySelectorAll(".nav-button").forEach(button => {
+      button.addEventListener("click", () => {
+        activeCategory = "All topics";
+        renderFilters();
+        searchInput.value = "";
+        setView(button.dataset.view);
+      });
+    });
+
+    document.getElementById("start-button").addEventListener("click", event => openLesson(event.currentTarget.dataset.lessonId));
+    document.getElementById("continue-button").addEventListener("click", event => openLesson(event.currentTarget.dataset.lessonId));
+    document.getElementById("continue-link").addEventListener("click", () => {
+      activeCategory = "All topics";
+      activeView = "all";
+      searchInput.value = "";
+      renderFilters();
+      setView("all");
+    });
+    document.getElementById("reset-filter").addEventListener("click", () => {
+      activeCategory = "All topics";
+      activeView = "all";
+      searchInput.value = "";
+      renderFilters();
+      document.querySelectorAll(".nav-button").forEach(button => {
+        button.classList.toggle("active", button.dataset.view === "all");
+      });
+      updateCurriculumLabels();
+      renderLessons();
+    });
+    document.getElementById("close-modal").addEventListener("click", closeLesson);
+    modalBackdrop.addEventListener("click", event => {
+      if (event.target === modalBackdrop) closeLesson();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !modalBackdrop.classList.contains("hidden")) closeLesson();
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchInput.focus();
+      }
+    });
+
+    document.getElementById("quiz-options").addEventListener("click", event => {
+      const button = event.target.closest("[data-answer]");
+      if (!button || selectedAnswer || !currentLessonId) return;
+      const lesson = lessonById.get(currentLessonId);
+      if (!lesson) return;
+      selectedAnswer = true;
+      const isCorrect = Number(button.dataset.answer) === lesson.answer;
+      document.querySelectorAll(".quiz-option").forEach(option => {
+        option.disabled = true;
+        if (Number(option.dataset.answer) === lesson.answer) option.classList.add("correct");
+      });
+      if (!isCorrect) button.classList.add("incorrect");
+      document.getElementById("quiz-feedback").textContent = isCorrect
+        ? "That's right! You're building a solid foundation. ✨"
+        : `Not quite. The best answer is “${lesson.options[lesson.answer]}”. Give the example another look!`;
+    });
+
+    document.getElementById("complete-button").addEventListener("click", () => {
+      if (!currentLessonId) return;
+      if (progress[currentLessonId]) {
+        showToast("This lesson is already in your completed list.");
+        return;
+      }
+      progress[currentLessonId] = true;
+      saveProgress();
+      updateDashboard();
+      document.getElementById("complete-button").classList.add("done");
+      document.getElementById("complete-button").textContent = "Completed ✓";
+      showToast("Lesson complete. Nice work! 🎉");
+    });
+
+    document.getElementById("search").addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        searchInput.value = "";
+        searchInput.blur();
+        updateCurriculumLabels();
+        renderLessons();
+      }
+    });
+
+    renderFilters();
+    updateDashboard();
+  </script>
+</body>
+</html>
