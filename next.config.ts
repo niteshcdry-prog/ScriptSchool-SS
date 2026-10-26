@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    agentUpgrade: "security",
+  },
   async headers() {
     return [{
       source: "/:path*",
