@@ -20,7 +20,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { LearnerAnalytics } from "@/lib/analytics-schema";
 import type { PublicLesson } from "@/lib/curriculum";
+import { getCoachInsight } from "@/lib/coach";
+import { getCommunitySnapshot } from "@/lib/community";
+import { getLaunchReadiness } from "@/lib/launch-readiness";
 import { getNextUnlockedLesson, getPrerequisiteMap, isLessonUnlocked } from "@/lib/learning-path";
+import { isPremiumCourse, planCatalog, type PlanId } from "@/lib/plans";
 import { runPracticeSnippet } from "@/lib/practice-runner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -40,17 +44,50 @@ type CourseOverview = {
 };
 
 const localProgressKey = "script-school-progress-v1";
+const studySessionKey = "script-school-study-log-v1";
+
+function readStoredStudyDates(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(studySessionKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function readStoredStreakDays(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem("script-school-streak-v1");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function LearningApp({
   lessons,
+  courseCatalog,
   initialCompletedIds,
   analytics,
   user,
+  initialPlan,
 }: {
   lessons: PublicLesson[];
+  courseCatalog: CourseOverview[];
   initialCompletedIds: string[];
   analytics: LearnerAnalytics | null;
   user: LearningUser;
+  initialPlan?: PlanId;
 }) {
   const router = useRouter();
   const [completedIds, setCompletedIds] = useState<Set<string>>(() => new Set(initialCompletedIds));
@@ -75,6 +112,8 @@ export default function LearningApp({
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [studyDates, setStudyDates] = useState<string[]>(() => readStoredStudyDates());
+  const currentPlan = initialPlan ?? "free";
   const searchRef = useRef<HTMLInputElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const profileCloseRef = useRef<HTMLButtonElement>(null);
@@ -82,6 +121,7 @@ export default function LearningApp({
   const profileFocusTarget = useRef<HTMLElement | null>(null);
 
   const courses = useMemo(() => {
+    if (courseCatalog.length) return courseCatalog;
     const byId = new Map<string, CourseOverview>();
     for (const lesson of lessons) {
       const course = byId.get(lesson.courseId) || {
@@ -101,10 +141,13 @@ export default function LearningApp({
       byId.set(lesson.courseId, course);
     }
     return [...byId.values()];
-  }, [lessons]);
+  }, [courseCatalog, lessons]);
+  const accessibleLessons = lessons.filter((lesson) =>
+    !isPremiumCourse(lesson.courseId) || currentPlan === "pro" || user.isAdmin,
+  );
   const courseLessons = activeCourseId === "all"
-    ? lessons
-    : lessons.filter((lesson) => lesson.courseId === activeCourseId);
+    ? accessibleLessons
+    : accessibleLessons.filter((lesson) => lesson.courseId === activeCourseId);
   const categories = useMemo(
     () => ["All topics", ...new Set(courseLessons.map((lesson) => lesson.category))],
     [courseLessons],
@@ -145,17 +188,7 @@ export default function LearningApp({
       .sort((left, right) => right.complete - left.complete || right.percent - left.percent);
   }, [completedIds, lessons]);
   const strongestCategory = categoryProgress[0] || null;
-  const streakDays = useMemo(() => {
-    if (typeof window === "undefined") return [] as string[];
-    try {
-      const raw = window.localStorage.getItem("script-school-streak-v1");
-      if (!raw) return [] as string[];
-      const parsed = JSON.parse(raw) as unknown;
-      return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [] as string[];
-    } catch {
-      return [] as string[];
-    }
-  }, [completedIds]);
+  const streakDays = readStoredStreakDays();
   const currentStreak = useMemo(() => {
     if (!streakDays.length) return 0;
     const uniqueDays = new Set(streakDays);
@@ -176,6 +209,37 @@ export default function LearningApp({
     }
     return streak;
   }, [streakDays]);
+  const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const studyGoalReached = useMemo(() => {
+    return studyDates.includes(todayKey);
+  }, [studyDates, todayKey]);
+  const recentStudyCount = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - 6);
+    return studyDates.filter((entry) => new Date(`${entry}T00:00:00`).getTime() >= cutoff.getTime()).length;
+  }, [studyDates]);
+  const focusPlan = nextLesson ? nextLesson.title : strongestCategory ? `Review ${strongestCategory.category}` : "Start your first lesson";
+  const coachInsight = useMemo(() => getCoachInsight({
+    lessons: accessibleLessons,
+    completedIds,
+    analytics,
+    nextLesson,
+    strongestCategory,
+    streak: currentStreak,
+  }), [accessibleLessons, analytics, completedIds, currentStreak, nextLesson, strongestCategory]);
+  const readiness = useMemo(() => getLaunchReadiness({
+    hasStagingReview: true,
+    hasMonitoring: true,
+    hasBackupPolicy: false,
+    hasBillingLayer: false,
+  }), []);
+  const community = useMemo(() => getCommunitySnapshot({
+    completedCount,
+    percentage,
+    streak: currentStreak,
+  }), [completedCount, currentStreak, percentage]);
+  const selectedPlan = planCatalog[currentPlan];
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleLessons = courseLessons.filter((lesson) => {
     const categoryMatches = activeCategory === "All topics" || lesson.category === activeCategory;
@@ -211,6 +275,11 @@ export default function LearningApp({
     if (!response.ok) throw new Error(body.error || "Progress could not be saved.");
     if (body.completedLessonIds) setCompletedIds(new Set(body.completedLessonIds));
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(studySessionKey, JSON.stringify(studyDates));
+  }, [studyDates]);
 
   useEffect(() => {
     let cancelled = false;
@@ -377,6 +446,15 @@ export default function LearningApp({
     }
   }
 
+  function logStudySession() {
+    const today = new Date().toISOString().slice(0, 10);
+    setStudyDates((previous) => {
+      if (previous.includes(today)) return previous;
+      return [...previous, today].sort();
+    });
+    showNotice("Session logged. Keep your momentum going!");
+  }
+
   async function completeLesson() {
     if (!currentLesson || busy || completedIds.has(currentLesson.id)) return;
     setBusy(true);
@@ -391,6 +469,7 @@ export default function LearningApp({
           window.localStorage.setItem(streakKey, JSON.stringify([...entries, today].sort()));
         }
       }
+      logStudySession();
       showNotice("Lesson complete. Nice work!");
     } catch (error) {
       showNotice(error instanceof Error ? error.message : "Progress could not be saved.");
@@ -553,14 +632,81 @@ export default function LearningApp({
           </section>
 
           <section className="insight-panel" aria-labelledby="insight-heading">
-            <div>
-              <p className="welcome-kicker">YOUR MOMENTUM</p>
-              <h2 id="insight-heading">Keep your streak alive</h2>
+            <div className="insight-header">
+              <div>
+                <p className="welcome-kicker">YOUR MOMENTUM</p>
+                <h2 id="insight-heading">Keep your streak alive</h2>
+              </div>
+              <button
+                className="focus-session-button"
+                type="button"
+                onClick={logStudySession}
+                disabled={studyGoalReached}
+              >
+                {studyGoalReached ? "Session logged" : "Log today’s focus"}
+              </button>
             </div>
             <div className="insight-grid">
               <div className="achievement-pill"><span className="badge-dot">🔥</span><div><strong>{currentStreak} day streak</strong><small>Practice consistency</small></div></div>
               <div className="achievement-pill"><span className="badge-dot">🏆</span><div><strong>{strongestCategory ? `${strongestCategory.category}` : "Start learning"}</strong><small>{strongestCategory ? `${strongestCategory.complete}/${strongestCategory.total} completed` : "Choose your first lesson"}</small></div></div>
-              <div className="achievement-pill"><span className="badge-dot">➡️</span><div><strong>{nextLesson ? nextLesson.title : "Finished"}</strong><small>{nextLesson ? "Recommended next step" : "You completed the full curriculum"}</small></div></div>
+              <div className="achievement-pill"><span className="badge-dot">➡️</span><div><strong>{focusPlan}</strong><small>{nextLesson ? "Recommended next step" : "Review your strongest topic"}</small></div></div>
+            </div>
+            <div className="focus-plan" aria-label="Daily learning goal and focus plan">
+              <div className="focus-metric">
+                <span>Today’s goal</span>
+                <strong>{studyGoalReached ? "Goal reached" : "1 more session"}</strong>
+                <small>{studyGoalReached ? "You logged a focused session today." : `You’ve logged ${recentStudyCount} sessions in the last 7 days.`}</small>
+              </div>
+              <div className="focus-metric focus-metric-highlight">
+                <span>Recommended focus</span>
+                <strong>{focusPlan}</strong>
+                <small>{nextLesson ? "Keep momentum by completing the next unlocked lesson." : "A quick review is the best way to reinforce your strongest topic."}</small>
+              </div>
+            </div>
+            <div className="coach-panel" aria-label="Adaptive learning coach">
+              <div className="coach-panel-header">
+                <span className="coach-badge">AI coach</span>
+                <strong>{coachInsight.title}</strong>
+              </div>
+              <p>{coachInsight.summary}</p>
+              <button
+                type="button"
+                className="coach-action"
+                onClick={() => {
+                  if (!coachInsight.lessonId) return;
+                  const target = lessons.find((lesson) => lesson.id === coachInsight.lessonId) || nextLesson || lessons[0];
+                  if (target) openLesson(target, document.activeElement as HTMLElement);
+                }}
+              >
+                {coachInsight.actionLabel}
+              </button>
+            </div>
+          </section>
+
+          <section className="launch-readiness-panel" aria-labelledby="launch-readiness-heading">
+            <div className="section-head">
+              <div>
+                <p className="welcome-kicker">LAUNCH HARDENING</p>
+                <h2 id="launch-readiness-heading">Production checklist</h2>
+              </div>
+              <span className="readiness-score">{readiness.score}%</span>
+            </div>
+            <div className="launch-readiness-body">
+              <div className="readiness-summary">
+                <strong>{readiness.headline}</strong>
+                <p>These checks keep the platform stable before public access, billing, and community growth expand.</p>
+              </div>
+              <div className="readiness-list" role="list" aria-label="Launch readiness checks">
+                {readiness.checks.map((check) => (
+                  <div key={check.id} className={`readiness-item ${check.status}`} role="listitem">
+                    <span className="readiness-status" aria-label={`${check.title}: ${check.status}`} />
+                    <div>
+                      <strong>{check.title}</strong>
+                      <p>{check.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -574,11 +720,13 @@ export default function LearningApp({
                   (lesson) => lesson.courseId === course.id && completedIds.has(lesson.id),
                 ).length;
                 const progress = Math.round(courseComplete / course.lessonCount * 100);
+                const isCourseLocked = isPremiumCourse(course.id) && currentPlan === "free" && !user.isAdmin;
                 return (
-                  <article className="course-card" key={course.id}>
+                  <article className={`course-card ${isCourseLocked ? "course-card-locked" : ""}`} key={course.id}>
                     <div className="course-card-heading">
                       <span className="course-card-icon"><Code2 size={19} aria-hidden="true" /></span>
                       <span className="course-card-level">{course.level}</span>
+                      {isCourseLocked && <span className="course-plan-lock">Pro</span>}
                     </div>
                     <h3>{course.title}</h3>
                     <p className="course-card-description">{course.description}</p>
@@ -598,22 +746,85 @@ export default function LearningApp({
                       <ul>{course.learningOutcomes.map((outcome) => <li key={outcome}>{outcome}</li>)}</ul>
                     </details>
                     <div className="course-card-progress">
-                      <span>{courseComplete} of {course.lessonCount} completed</span>
-                      <div className="progress-track" role="progressbar" aria-label={`${course.title} completion`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress}%` }} /></div>
+                      <span>{isCourseLocked ? "Locked for free access" : `${courseComplete} of ${course.lessonCount} completed`}</span>
+                      <div className="progress-track" role="progressbar" aria-label={`${course.title} completion`} aria-valuenow={isCourseLocked ? 0 : progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${isCourseLocked ? 0 : progress}%` }} /></div>
                     </div>
                     <button
                       className="course-card-action"
                       type="button"
                       onClick={() => {
+                        if (isCourseLocked) {
+                          setProfileOpen(true);
+                          showNotice("Pro checkout is not available yet. Course access requires an active subscription.");
+                          return;
+                        }
                         setActiveCourseId(course.id);
                         selectView("all");
                       }}
                     >
-                      View course <ArrowRight size={15} aria-hidden="true" />
+                      {isCourseLocked ? "See Pro access details" : "View course"} <ArrowRight size={15} aria-hidden="true" />
                     </button>
                   </article>
                 );
               })}
+            </div>
+          </section>
+
+          <section className="community-panel" aria-labelledby="community-heading">
+            <div className="section-head">
+              <div><h2 id="community-heading">Community & growth</h2><p>Stay connected and keep your momentum visible.</p></div>
+            </div>
+            <div className="community-grid">
+              <article className="community-card">
+                <div className="community-card-header">
+                  <h3>Leaderboard</h3>
+                  <span>Weekly</span>
+                </div>
+                <ul className="community-list">
+                  {community.leaderboard.map((entry, index) => (
+                    <li key={entry.name} className={entry.name === "You" ? "is-you" : ""}>
+                      <span className="rank">#{index + 1}</span>
+                      <div>
+                        <strong>{entry.name}</strong>
+                        <small>{entry.streak} day streak</small>
+                      </div>
+                      <b>{entry.progress}%</b>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+              <article className="community-card highlight-card">
+                <div className="community-card-header">
+                  <h3>{community.challenge.title}</h3>
+                  <span>{community.challenge.reward}</span>
+                </div>
+                <div className="challenge-progress" aria-label="Cohort challenge progress">
+                  <div className="mini-track"><span style={{ width: `${community.challenge.progress}%` }} /></div>
+                  <div className="challenge-meta">
+                    <strong>{community.challenge.progress}%</strong>
+                    <small>{community.challenge.target}% target</small>
+                  </div>
+                </div>
+                <p>{community.challenge.description}</p>
+              </article>
+              <article className="community-card">
+                <div className="community-card-header">
+                  <h3>Community discussions</h3>
+                  <span>Live now</span>
+                </div>
+                <ul className="community-discussion-list">
+                  {community.discussions.map((discussion) => (
+                    <li key={discussion.title}>
+                      <span className="discussion-tag">{discussion.tag}</span>
+                      <div>
+                        <strong>{discussion.title}</strong>
+                        <small>{discussion.author} · {discussion.replies} replies</small>
+                      </div>
+                      <p>{discussion.excerpt}</p>
+                    </li>
+                  ))}
+                </ul>
+              </article>
             </div>
           </section>
 
@@ -667,9 +878,11 @@ export default function LearningApp({
             {courses.length > 1 && (
               <div className="topic-filters" role="group" aria-label="Filter lessons by course">
                 <button className={activeCourseId === "all" ? "topic-chip selected" : "topic-chip"} type="button" aria-pressed={activeCourseId === "all"} onClick={() => { setActiveCourseId("all"); setActiveCategory("All topics"); }}>All courses<span>{lessons.length}</span></button>
-                {courses.map((course) => (
+                {courses
+                  .filter((course) => !isPremiumCourse(course.id) || currentPlan === "pro" || user.isAdmin)
+                  .map((course) => (
                   <button className={activeCourseId === course.id ? "topic-chip selected" : "topic-chip"} key={course.id} type="button" aria-pressed={activeCourseId === course.id} onClick={() => { setActiveCourseId(course.id); setActiveCategory("All topics"); }}>{course.title}<span>{lessons.filter((lesson) => lesson.courseId === course.id).length}</span></button>
-                ))}
+                  ))}
               </div>
             )}
             <div className="topic-filters" role="group" aria-label="Filter lessons by topic">
@@ -801,6 +1014,31 @@ export default function LearningApp({
                 <div className="profile-detail"><span>Account type</span><strong>{user.isAdmin ? "Administrator" : "Learner"}</strong></div>
                 <p className="profile-detail"><span>Email address</span><strong>{user.email}</strong></p>
               </div>
+              <section className="profile-plan" aria-labelledby="profile-plan-heading">
+                <div className="profile-section-heading">
+                  <div><h3 id="profile-plan-heading">Plan & access</h3><p>Your access reflects the plan attached to your account.</p></div>
+                  <span className={`plan-pill ${currentPlan}`}>{selectedPlan.label}</span>
+                </div>
+                <div className="plan-grid" role="list" aria-label="Learning plan options">
+                  {Object.values(planCatalog).map((plan) => (
+                    <article
+                      key={plan.id}
+                      className={`plan-option ${currentPlan === plan.id ? "selected" : ""}`}
+                      aria-current={currentPlan === plan.id ? "true" : undefined}
+                    >
+                      <span className="plan-option-header">
+                        <strong>{plan.label}</strong>
+                        <small>{plan.priceLabel}</small>
+                      </span>
+                      <p>{plan.summary}</p>
+                      <ul>
+                        {plan.includes.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                      {plan.id === "pro" && <small>Subscriptions are not available yet. Existing access is granted only by verified billing or an administrator.</small>}
+                    </article>
+                  ))}
+                </div>
+              </section>
               <form className="profile-edit-form" onSubmit={saveProfileName}>
                 <label>Display name<input maxLength={100} required value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label>
                 <button className="admin-secondary" type="submit" disabled={profileBusy || profileName.trim() === savedProfileName}>{profileBusy ? "Saving…" : "Save name"}</button>

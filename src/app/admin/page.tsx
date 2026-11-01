@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AdminDashboard, { type AdminLesson } from "@/components/admin-dashboard";
 import { requireAdmin } from "@/lib/auth";
+import { adminAnalyticsSchema, type AdminAnalytics } from "@/lib/admin-analytics";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -14,15 +15,17 @@ export default async function AdminPage() {
     { data: lessons, error: lessonsError },
     { data: prerequisites, error: prerequisitesError },
     { data: activity, error: activityError },
+    { data: analytics, error: analyticsError },
   ] = await Promise.all([
     supabase.from("courses").select("id,title,description,language,difficulty_level,estimated_minutes,recommended_prerequisites,learning_outcomes,published").order("title").limit(100),
     supabase.from("modules").select("id,course_id,title,sort_order").order("sort_order").limit(500),
     supabase.from("lessons").select("id,module_id,title,icon,duration,level,description,explanation,code,tip,practice_prompt,practice_starter,practice_hint,practice_solution,quiz_explanation,sort_order,published,quiz_questions(prompt,quiz_options(id,label,sort_order),quiz_answers(correct_option_id))").order("sort_order").limit(500),
     supabase.from("lesson_prerequisites").select("lesson_id,prerequisite_lesson_id"),
     supabase.from("admin_audit_logs").select("id,action,entity_type,entity_id,created_at").order("created_at", { ascending: false }).limit(30),
+    supabase.rpc("get_admin_analytics"),
   ]);
-  if (coursesError || modulesError || lessonsError || prerequisitesError || activityError) {
-    const error = coursesError || modulesError || lessonsError || prerequisitesError || activityError;
+  if (coursesError || modulesError || lessonsError || prerequisitesError || activityError || analyticsError) {
+    const error = coursesError || modulesError || lessonsError || prerequisitesError || activityError || analyticsError;
     throw new Error("Could not load the administration workspace.", { cause: error });
   }
 
@@ -87,6 +90,8 @@ export default async function AdminPage() {
     };
   });
 
+  const adminAnalytics: AdminAnalytics = adminAnalyticsSchema.parse(analytics);
+
   return (
     <main className="admin-page">
       <header className="admin-topbar">
@@ -98,6 +103,7 @@ export default async function AdminPage() {
         <h1>Manage the learning experience</h1>
         <p className="admin-intro">Edit curriculum and quizzes, manage learner access, and review progress. Unpublish courses or lessons to remove them from the learner catalog while preserving progress and history.</p>
         <AdminDashboard
+          analytics={adminAnalytics}
           courses={(courses || []).map((course) => ({
             id: course.id,
             title: course.title,

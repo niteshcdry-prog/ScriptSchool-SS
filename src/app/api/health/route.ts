@@ -1,26 +1,43 @@
 import { NextResponse } from "next/server";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isSupabaseAdminConfigured } from "@/lib/supabase/config";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!isSupabaseConfigured()) {
+  const timestamp = new Date().toISOString();
+
+  if (!isSupabaseAdminConfigured()) {
     return NextResponse.json(
-      { status: "degraded", checks: { database: false } },
+      {
+        service: "script-school",
+        status: "degraded",
+        checks: { database: false },
+        timestamp,
+      },
       { status: 503 },
     );
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { error } = await supabase.from("courses").select("id", { head: true, count: "exact" }).limit(1);
   if (error) {
     console.error("Health check database query failed.", error);
     return NextResponse.json(
-      { status: "degraded", checks: { database: false } },
+      {
+        service: "script-school",
+        status: "degraded",
+        checks: { database: false },
+        timestamp,
+      },
       { status: 503 },
     );
   }
 
-  return NextResponse.json({ status: "ok", checks: { database: true } });
+  return NextResponse.json({
+    service: "script-school",
+    status: "ok",
+    checks: { database: true },
+    timestamp,
+  });
 }

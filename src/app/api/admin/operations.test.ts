@@ -16,7 +16,9 @@ vi.mock("@/lib/supabase/admin", () => ({
 import { POST as saveCourse } from "./courses/route";
 import { POST as saveLesson } from "./lessons/route";
 import { POST as saveModule } from "./modules/route";
+import { PATCH as selfServicePlan } from "../account/plan/route";
 import { PATCH as updateRole } from "./users/[userId]/route";
+import { PATCH as updatePlan } from "./users/[userId]/plan/route";
 import { DELETE as resetProgress } from "./users/[userId]/progress/route";
 
 const actorId = "77a3af87-0f53-43c2-9ca8-43f25bc9efc0";
@@ -134,6 +136,39 @@ describe("atomic administrator mutation routes", () => {
     expect(response.status).toBe(409);
     expect(await response.json()).toMatchObject({ error: expect.stringContaining("At least one administrator") });
     errorSpy.mockRestore();
+  });
+
+  it("sets an account plan through the audited administrator RPC", async () => {
+    const response = await updatePlan(createRequest({ plan: "pro" }, "PATCH"), {
+      params: Promise.resolve({ userId: learnerId }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ plan: "pro", saved: true });
+    expect(mocks.rpc).toHaveBeenCalledWith("admin_set_user_plan", {
+      p_actor_id: actorId,
+      p_user_id: learnerId,
+      p_plan: "pro",
+    });
+  });
+
+  it("denies plan changes when the caller is not an administrator", async () => {
+    mocks.actor.mockResolvedValue(null);
+    const response = await updatePlan(createRequest({ plan: "pro" }, "PATCH"), {
+      params: Promise.resolve({ userId: learnerId }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("does not allow a learner to grant themselves a plan", async () => {
+    const selfServiceResponse = await selfServicePlan();
+
+    expect(selfServiceResponse.status).toBe(403);
+    expect(await selfServiceResponse.json()).toMatchObject({
+      error: expect.stringContaining("active billing subscription"),
+    });
   });
 
   it("resets progress through the same transaction that writes its audit event", async () => {

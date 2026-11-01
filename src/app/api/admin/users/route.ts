@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   if (!userIds.length) return NextResponse.json({ users: [], nextPage: null });
 
   const [{ data: profiles, error: profilesError }, { data: progressCounts, error: progressError }] = await Promise.all([
-    supabase.from("profiles").select("id,display_name,role").in("id", userIds),
+    supabase.from("profiles").select("id,display_name,role,plan").in("id", userIds),
     supabase.rpc("admin_get_progress_counts", { p_user_ids: userIds }),
   ]);
   if (profilesError || progressError) {
@@ -51,6 +51,7 @@ export async function GET(request: Request) {
         email: user.email || "",
         name: profile?.display_name || user.user_metadata?.full_name || "",
         role: profile?.role || "learner",
+        plan: profile?.plan || "free",
         completedCount: progressCountByUser.get(user.id) || 0,
         createdAt: user.created_at,
       };

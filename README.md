@@ -34,10 +34,11 @@ Use Node.js 22.13 or later and npm.
    - `SUPABASE_SERVICE_ROLE_KEY`
 
    The service-role key is server-only. Never add a `NEXT_PUBLIC_` prefix to it, commit it, or send it to a browser.
+   Public account creation stays unavailable until Turnstile is configured. Create a Cloudflare Turnstile widget, put its public site key in `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, set its secret in Supabase Authentication's CAPTCHA settings, and set `NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED=true` only after CAPTCHA is enabled in Supabase. Never put the secret key in an app environment variable or source control.
 
 3. Apply every SQL file in `supabase/migrations/` in filename order using the Supabase SQL editor. Apply each migration once per environment; do not rerun an already-applied schema migration on a populated database. Existing installations must apply any missing migrations, including [`20261019010000_require_auth_for_curriculum.sql`](./supabase/migrations/20261019010000_require_auth_for_curriculum.sql) and [`20261020000000_multi_course_catalog.sql`](./supabase/migrations/20261020000000_multi_course_catalog.sql). The multi-course migration preserves old course rows as unpublished, consolidates their modules under the JavaScript course, adds course learning metadata, and rebuilds JavaScript prerequisites without deleting lesson IDs or progress.
 
-4. In Supabase Authentication settings, enable email/password sign-in. Set the local site URL and add `http://localhost:3000/auth/callback` to the allowed redirect URLs. Add the production callback URL after deployment.
+4. In Supabase Authentication settings, enable email/password sign-in. Set the local site URL and add `http://localhost:3000/auth/callback` to the allowed redirect URLs. Configure Cloudflare Turnstile CAPTCHA before enabling new sign-ups in Supabase; keep sign-ups disabled until the site key and secret are configured and verified. Add the production callback URL after deployment.
 
 5. Seed all five courses, 18 modules, 73 lessons, and quizzes. On an existing database, run the seed after applying the new migration so the additional subjects are added and existing JavaScript lessons are assigned to the unified course:
 
@@ -57,7 +58,13 @@ Use Node.js 22.13 or later and npm.
 
 ### Staging and production setup
 
-Create a staging Supabase project before production. Set all three environment variables in the Vercel **Preview** environment, apply every migration in filename order, configure Auth URLs for that deployment, seed the curriculum, then verify the flows in [Launch verification](#launch-verification). Keep the staging project and test accounts separate from production.
+Create a staging Supabase project before production. Set the three Supabase environment variables in the Vercel **Preview** environment, and configure Turnstile's public site key and `NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED=true` only after adding the Turnstile secret to Supabase Auth and enabling CAPTCHA there. Apply every migration in filename order, configure Auth URLs for that deployment, seed the curriculum, then verify the flows in [Launch verification](#launch-verification). Keep the staging project and test accounts separate from production. The access migration resets existing Pro flags to Free because earlier plan selection was client-controlled and cannot be treated as a verified purchase.
+
+A concrete staging and deployment checklist is maintained in [docs/staging-deployment-checklist.md](docs/staging-deployment-checklist.md). Validate environment variables before any staging session:
+
+```sh
+npm run check:env
+```
 
 Configure Supabase Auth's built-in email rate limits and CAPTCHA/bot protection before enabling public sign-up. The app's quiz answer endpoint is additionally limited to 30 checks per client IP per fixed one-minute window; the counter is stored in PostgreSQL so it works across application instances. The deployed platform must provide a trustworthy `x-forwarded-for` or `x-real-ip` header. Do not expose the service-role key.
 
@@ -73,11 +80,25 @@ Run this checklist against staging using a learner account and a separate admini
 - Confirm learner analytics show only the signed-in account's completion totals and quiz history.
 - Confirm `GET /api/health` returns HTTP 200 when the database is available and HTTP 503 when it is unavailable.
 - As a learner, confirm admin routes are denied and only that learner's progress is readable.
+- With a Free account, confirm premium course lesson bodies and quiz content are unavailable through both Supabase reads and API requests; confirm Pro accounts can access them.
+- Confirm learners cannot grant or modify their own plan. As an administrator, grant and revoke Pro access and verify each change appears in the audit history.
 - Confirm direct learner inserts to `quiz_attempts` and direct client calls to the quiz-answer RPC are denied; quiz checks must go through the rate-limited app endpoint.
 - As an administrator, create/update a course, module, lesson and quiz; verify each change appears in the audit log.
 - Change a test account role and reset its progress; verify audit entries appear, self-demotion is rejected, and the final admin cannot be demoted.
 - Make more than 30 quiz checks in one minute and confirm the endpoint returns HTTP 429 with `Retry-After`.
 - Restore a recent database backup into a non-production project and verify that the app can read its curriculum and progress.
+
+## Recommended phased rollout
+
+The current platform is production-ready in structure, but it should be expanded in controlled stages to reach a reliable public launch and long-term growth path.
+
+1. Phase 1 — Launch hardening: complete staging verification, database backups, production monitoring, and operational guardrails. Use the health route and deployment verification checklist to confirm the app behaves correctly before public sign-up.
+2. Phase 2 — Retention and engagement: add personalized learning recommendations, stronger streak/reward flows, and product analytics for completion patterns and at-risk learners.
+3. Phase 3 — Monetization and access: support plan tiers, premium course access, and subscription management behind a secure admin and billing layer.
+4. Phase 4 — Adaptive AI support: provide coaching hints, adaptive practice, and guided next-step recommendations using mistakes and mastery patterns.
+5. Phase 5 — Community and growth: add cohort and peer learning, discussion threads, leaderboards, and deeper learner engagement features.
+
+This repository already contains the foundation for Phase 1 and beyond; each phase should be shipped incrementally rather than all at once to keep the rollout stable and measurable. The app also surfaces a launch-readiness checklist in the dashboard so the remaining operational guardrails stay visible during staging and rollout.
 
 ## First administrator
 
@@ -91,7 +112,7 @@ where profiles.id = auth.users.id
   and auth.users.email = 'admin@example.com';
 ```
 
-The administrator sign-in page is available at `/admin/login`; successful sign-in requires the account to already have the `admin` role. The protected console is available at `/admin` and supports creating and publishing/unpublishing courses, organizing modules, editing lesson content and quizzes, previewing unpublished lesson drafts, configuring lesson prerequisites, restoring recent content versions, paginated account review, learner/admin role changes, learner progress resets, and recent audit history. Unpublishing is the safe archive action; physical deletion is intentionally not exposed. Administrators cannot change their own role, and the final administrator cannot be demoted.
+The administrator sign-in page is available at `/admin/login`; successful sign-in requires the account to already have the `admin` role. The protected console is available at `/admin` and supports creating and publishing/unpublishing courses, organizing modules, editing lesson content and quizzes, previewing unpublished lesson drafts, configuring lesson prerequisites, restoring recent content versions, cohort analytics, paginated account review, learner/admin role and plan changes, learner progress resets, and recent audit history. Plan grants made in the console are audited and should be treated as manual access overrides until the payment provider is configured. Unpublishing is the safe archive action; physical deletion is intentionally not exposed. Administrators cannot change their own role, and the final administrator cannot be demoted.
 
 ## Verification
 
@@ -108,12 +129,12 @@ GitHub Actions runs these checks for pull requests and pushes to any branch. CI 
 
 Deploy the repository to Vercel and configure the three Supabase environment variables in the project settings for each environment. Apply database migrations before seeding/deploying the corresponding app version. Add the deployed `/auth/callback` URL to Supabase's allowed redirect URLs and set the production site URL in Supabase Auth settings.
 
-Before public launch, configure custom email templates/delivery, database backups, monitoring and alerting, and a production-specific account recovery policy. Set a backup retention period, schedule a restore drill, and assign an owner for security/dependency advisories. OAuth, subscriptions, and payments are deliberately not included in this foundation.
+Before public launch, configure custom email templates/delivery, database backups, monitoring and alerting, and a production-specific account recovery policy. Set a backup retention period, schedule a restore drill, and assign an owner for security/dependency advisories. Subscription checkout and provider webhooks are not connected yet; Pro access is server-enforced and can currently be granted only by an administrator. Do not represent manual plan changes as a completed purchase.
 
 ## Security and data notes
 
 - The `anon` key is intended for browser-facing Supabase access; row-level security denies anonymous reads of curriculum and quiz content.
-- The service-role key is used only by server code for admin actions and the curriculum seed script.
+- The service-role key is used only by protected server routes, the health database check, and the curriculum seed script.
 - Quiz checking is available only to signed-in learners and returns whether a selected option is correct. The answer key is a separate table and is not readable by learners.
 - Quiz answer validation is callable only with the server-side service-role credential, after the app rate-limit check; authenticated attempts are inserted by the same database function that checks the answer.
 - Lesson/progress writes validate requests and are scoped to the signed-in user. Administrator requests verify the role server-side before using elevated database access.
