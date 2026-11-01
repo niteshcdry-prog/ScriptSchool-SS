@@ -7,6 +7,7 @@ import { additionalCourses, additionalLessons, additionalModules } from "@/data/
 import { expandJavascriptLessons } from "@/data/javascript-practice";
 import { isSupabaseConfigured } from "./supabase/config";
 import { isMissingAuthSession } from "./supabase/auth-errors";
+import { createSupabaseAdminClient } from "./supabase/admin";
 import { createSupabaseServerClient } from "./supabase/server";
 
 const lessonSchema = z.object({
@@ -76,10 +77,16 @@ type RemoteLesson = {
       learning_outcomes: string[];
     } | null;
   } | null;
-  quiz_questions: Array<{
+};
+
+type RemoteQuizQuestion = {
+  id: string;
+  lesson_id: string;
+  prompt: string;
+  quiz_options: Array<{
     id: string;
-    prompt: string;
-    quiz_options: Array<{ id: string; label: string; sort_order: number }>;
+    label: string;
+    sort_order: number;
   }>;
 };
 
@@ -122,7 +129,7 @@ export async function getPublicLessons(): Promise<PublicLesson[]> {
   ] = await Promise.all([
     supabase
       .from("lessons")
-      .select("id,title,icon,duration,level,description,explanation,code,tip,practice_prompt,practice_starter,practice_hint,practice_solution,quiz_explanation,sort_order,modules!inner(title,courses!inner(id,title,description,language,difficulty_level,estimated_minutes,recommended_prerequisites,learning_outcomes,published)),quiz_questions(id,prompt,quiz_options(id,label,sort_order))")
+      .select("id,title,icon,duration,level,description,explanation,code,tip,practice_prompt,practice_starter,practice_hint,practice_solution,quiz_explanation,sort_order,modules!inner(title,courses!inner(id,title,description,language,difficulty_level,estimated_minutes,recommended_prerequisites,learning_outcomes,published))")
       .eq("published", true)
       .eq("modules.courses.published", true)
       .order("sort_order"),
@@ -132,6 +139,24 @@ export async function getPublicLessons(): Promise<PublicLesson[]> {
   if (error || prerequisiteError) {
     throw new Error("Could not load the published curriculum.", { cause: error || prerequisiteError });
   }
+  const remoteLessons = (data || []) as unknown as RemoteLesson[];
+  const lessonIds = remoteLessons.map((lesson) => lesson.id);
+  // Scope the privileged lookup to lessons already visible through learner RLS.
+  const { data: quizQuestionData, error: quizQuestionError } = lessonIds.length
+    ? await createSupabaseAdminClient()
+      .from("quiz_questions")
+      .select("id,lesson_id,prompt,quiz_options(id,label,sort_order)")
+      .in("lesson_id", lessonIds)
+    : { data: [], error: null };
+  if (quizQuestionError) {
+    throw new Error("Could not load quiz questions for the published curriculum.", { cause: quizQuestionError });
+  }
+  const quizQuestionsByLesson = new Map<string, RemoteQuizQuestion[]>();
+  for (const question of (quizQuestionData || []) as RemoteQuizQuestion[]) {
+    const current = quizQuestionsByLesson.get(question.lesson_id) || [];
+    current.push(question);
+    quizQuestionsByLesson.set(question.lesson_id, current);
+  }
   const prerequisitesByLesson = new Map<string, string[]>();
   for (const prerequisite of prerequisiteData || []) {
     const current = prerequisitesByLesson.get(prerequisite.lesson_id) || [];
@@ -139,8 +164,8 @@ export async function getPublicLessons(): Promise<PublicLesson[]> {
     prerequisitesByLesson.set(prerequisite.lesson_id, current);
   }
 
-  return ((data || []) as unknown as RemoteLesson[]).map((lesson) => {
-    const question = lesson.quiz_questions[0];
+  return remoteLessons.map((lesson) => {
+    const question = quizQuestionsByLesson.get(lesson.id)?.[0];
     const options = [...(question?.quiz_options || [])].sort((left, right) => left.sort_order - right.sort_order);
     const validated = lessonSchema.parse({
       ...lesson,

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import type { LearnerAnalytics } from "@/lib/analytics-schema";
 import type { PublicLesson } from "@/lib/curriculum";
 import { getCoachInsight } from "@/lib/coach";
@@ -45,6 +45,9 @@ type CourseOverview = {
 
 const localProgressKey = "script-school-progress-v1";
 const studySessionKey = "script-school-study-log-v1";
+const studyStreakKey = "script-school-streak-v1";
+const studyStorageChangeEvent = "script-school-study-storage-change";
+const emptyStudyStorageSnapshot = JSON.stringify({ studyDates: [], streakDays: [] });
 
 function readStoredStudyDates(): string[] {
   if (typeof window === "undefined") return [];
@@ -63,7 +66,7 @@ function readStoredStudyDates(): string[] {
 function readStoredStreakDays(): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem("script-school-streak-v1");
+    const raw = window.localStorage.getItem(studyStreakKey);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     return Array.isArray(parsed)
@@ -72,6 +75,27 @@ function readStoredStreakDays(): string[] {
   } catch {
     return [];
   }
+}
+
+function subscribeToStudyStorage(onChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", onChange);
+  window.addEventListener(studyStorageChangeEvent, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(studyStorageChangeEvent, onChange);
+  };
+}
+
+function getStudyStorageSnapshot() {
+  return JSON.stringify({
+    studyDates: readStoredStudyDates(),
+    streakDays: readStoredStreakDays(),
+  });
+}
+
+function notifyStudyStorageChanged() {
+  window.dispatchEvent(new Event(studyStorageChangeEvent));
 }
 
 export default function LearningApp({
@@ -112,7 +136,15 @@ export default function LearningApp({
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const [studyDates, setStudyDates] = useState<string[]>(() => readStoredStudyDates());
+  const studyStorageSnapshot = useSyncExternalStore(
+    subscribeToStudyStorage,
+    getStudyStorageSnapshot,
+    () => emptyStudyStorageSnapshot,
+  );
+  const { studyDates, streakDays } = useMemo(
+    () => JSON.parse(studyStorageSnapshot) as { studyDates: string[]; streakDays: string[] },
+    [studyStorageSnapshot],
+  );
   const currentPlan = initialPlan ?? "free";
   const searchRef = useRef<HTMLInputElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -188,7 +220,6 @@ export default function LearningApp({
       .sort((left, right) => right.complete - left.complete || right.percent - left.percent);
   }, [completedIds, lessons]);
   const strongestCategory = categoryProgress[0] || null;
-  const streakDays = readStoredStreakDays();
   const currentStreak = useMemo(() => {
     if (!streakDays.length) return 0;
     const uniqueDays = new Set(streakDays);
@@ -275,11 +306,6 @@ export default function LearningApp({
     if (!response.ok) throw new Error(body.error || "Progress could not be saved.");
     if (body.completedLessonIds) setCompletedIds(new Set(body.completedLessonIds));
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(studySessionKey, JSON.stringify(studyDates));
-  }, [studyDates]);
 
   useEffect(() => {
     let cancelled = false;
@@ -448,10 +474,11 @@ export default function LearningApp({
 
   function logStudySession() {
     const today = new Date().toISOString().slice(0, 10);
-    setStudyDates((previous) => {
-      if (previous.includes(today)) return previous;
-      return [...previous, today].sort();
-    });
+    const previous = readStoredStudyDates();
+    if (!previous.includes(today)) {
+      window.localStorage.setItem(studySessionKey, JSON.stringify([...previous, today].sort()));
+      notifyStudyStorageChanged();
+    }
     showNotice("Session logged. Keep your momentum going!");
   }
 
@@ -461,12 +488,12 @@ export default function LearningApp({
     try {
       await syncCompleted("complete", currentLesson.id);
       if (typeof window !== "undefined") {
-        const streakKey = "script-school-streak-v1";
         const today = new Date().toISOString().slice(0, 10);
-        const existing = JSON.parse(window.localStorage.getItem(streakKey) || "[]") as unknown;
+        const existing = JSON.parse(window.localStorage.getItem(studyStreakKey) || "[]") as unknown;
         const entries = Array.isArray(existing) ? existing.filter((value): value is string => typeof value === "string") : [];
         if (!entries.includes(today)) {
-          window.localStorage.setItem(streakKey, JSON.stringify([...entries, today].sort()));
+          window.localStorage.setItem(studyStreakKey, JSON.stringify([...entries, today].sort()));
+          notifyStudyStorageChanged();
         }
       }
       logStudySession();
