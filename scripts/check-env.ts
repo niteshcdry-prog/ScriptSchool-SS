@@ -42,13 +42,21 @@ if (missingKeys.length > 0) {
   process.exit(1);
 }
 
-if (env.NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED === "true" && !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+const authCaptchaEnabled = env.NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED === "true";
+const authSignUpEnabled = env.NEXT_PUBLIC_AUTH_SIGNUP_ENABLED === "true";
+
+if (authCaptchaEnabled && !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
   console.error("NEXT_PUBLIC_TURNSTILE_SITE_KEY is required when authentication CAPTCHA is enabled.");
   process.exit(1);
 }
 
-if (env.NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED !== "true") {
-  console.warn("Authentication CAPTCHA is not enabled; public account creation remains unavailable.");
+if (authSignUpEnabled && (!authCaptchaEnabled || !env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)) {
+  console.error("Public account creation requires authentication CAPTCHA and a Turnstile site key.");
+  process.exit(1);
+}
+
+if (!authSignUpEnabled) {
+  console.warn("Public account creation is disabled; enable it only after staging authentication is verified.");
 }
 
 console.log("Environment configuration looks valid for local Supabase integration.");

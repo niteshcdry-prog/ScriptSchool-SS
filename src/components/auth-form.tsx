@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useRef, useState } from "react";
+import { isAuthSignUpEnabled } from "@/lib/auth-config";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type Mode = "signin" | "signup" | "forgot";
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 const authCaptchaEnabled = process.env.NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED === "true";
+const authSignUpEnabled = process.env.NEXT_PUBLIC_AUTH_SIGNUP_ENABLED === "true";
 
 export default function AuthForm({
   nextPath,
@@ -31,7 +33,11 @@ export default function AuthForm({
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<TurnstileInstance>(null);
   const captchaConfigured = !authCaptchaEnabled || Boolean(turnstileSiteKey);
-  const signUpEnabled = authCaptchaEnabled && Boolean(turnstileSiteKey);
+  const signUpEnabled = isAuthSignUpEnabled({
+    captchaEnabled: authCaptchaEnabled,
+    signUpEnabled: authSignUpEnabled,
+    siteKey: turnstileSiteKey,
+  });
 
   function changeMode(nextMode: Mode) {
     setMode(nextMode);
@@ -50,7 +56,7 @@ export default function AuthForm({
       return;
     }
     if (mode === "signup" && !signUpEnabled) {
-      setError("Account creation is paused until Turnstile is configured and enabled.");
+      setError("New account registration is currently paused.");
       return;
     }
     if (authCaptchaEnabled && !captchaToken) {
@@ -141,7 +147,7 @@ export default function AuthForm({
         <p className="auth-error" role="alert">Authentication CAPTCHA is enabled, but its public site key is not configured.</p>
       )}
       {mode === "signup" && !signUpEnabled && (
-        <p className="auth-captcha-help" role="status">Account creation is paused until Turnstile is configured and enabled.</p>
+        <p className="auth-captcha-help" role="status">New account registration is currently paused.</p>
       )}
       {authCaptchaEnabled && !captchaToken && captchaConfigured && (
         <p className="auth-captcha-help" role="status">Complete the security check to continue.</p>
@@ -156,11 +162,15 @@ export default function AuthForm({
           : <p className="auth-switch">Need a learner account? <Link href="/login">Learner sign in</Link></p>
       ) : mode === "forgot" ? (
         <button className="auth-mode-button" type="button" onClick={() => changeMode("signin")}>Back to sign in</button>
-      ) : (
+      ) : mode === "signup" ? (
+        <p className="auth-switch">Already have an account?{" "}
+          <button className="auth-mode-button" type="button" onClick={() => changeMode("signin")}>Sign in</button>
+        </p>
+      ) : signUpEnabled ? (
         <p className="auth-switch">{mode === "signin" ? "New to Script School?" : "Already have an account?"}{" "}
           <button className="auth-mode-button" type="button" onClick={() => changeMode(mode === "signin" ? "signup" : "signin")}>{mode === "signin" ? "Create an account" : "Sign in"}</button>
         </p>
-      )}
+      ) : null}
     </form>
   );
 }

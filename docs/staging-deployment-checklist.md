@@ -11,7 +11,8 @@
   - Put the widget's public site key in `NEXT_PUBLIC_TURNSTILE_SITE_KEY` for the deployed app.
   - Add the Turnstile secret in Supabase Authentication's CAPTCHA settings; never put it in app variables or source control.
   - Keep `NEXT_PUBLIC_AUTH_CAPTCHA_ENABLED=false` until the Supabase CAPTCHA setting is enabled and verified, then set it to `true`.
-- Keep Supabase's “Allow new users to sign up” setting disabled until CAPTCHA is configured and verified.
+  - Keep `NEXT_PUBLIC_AUTH_SIGNUP_ENABLED=false` while testing existing-account sign-in and password reset.
+- Keep Supabase's “Allow new users to sign up” setting disabled until CAPTCHA is configured and verified. Enable both Supabase sign-ups and `NEXT_PUBLIC_AUTH_SIGNUP_ENABLED=true` only after the staging auth flows pass.
 - Validate the file before launching the app:
 
 ```sh
@@ -41,8 +42,9 @@ Use a learner account and a separate admin account against the staging deploymen
 
 ### Learner checks
 
-- [ ] With CAPTCHA enabled in both Supabase and the app environment, sign up, verify email, sign in, and create a password reset flow.
-- [ ] Confirm sign-up remains unavailable when CAPTCHA is not fully configured.
+- [ ] With CAPTCHA enabled in both Supabase and the app environment, verify existing-account sign-in and password reset while public sign-up remains disabled.
+- [ ] After those checks pass, enable Supabase sign-ups and `NEXT_PUBLIC_AUTH_SIGNUP_ENABLED=true`, then sign up and verify email.
+- [ ] Confirm the app hides account creation while `NEXT_PUBLIC_AUTH_SIGNUP_ENABLED` is false.
 - [ ] Sign out and confirm the home page hides curriculum and quiz content.
 - [ ] Confirm anonymous reads of curriculum are denied.
 - [ ] Load all five subject courses and verify course metadata, module order, and lesson visibility.
@@ -68,7 +70,7 @@ Use a learner account and a separate admin account against the staging deploymen
 - [ ] Configure backup retention and a restore drill for the staging environment.
 - [ ] Configure monitoring and alerting for the production build.
 - [ ] Confirm DB backups, email settings, and auth bot protection are enabled before public sign-up.
-- [ ] Keep Supabase sign-ups disabled until the Turnstile secret, app site key, and CAPTCHA verification are complete.
+- [ ] Keep Supabase sign-ups and `NEXT_PUBLIC_AUTH_SIGNUP_ENABLED` disabled until the Turnstile secret, app site key, and CAPTCHA verification are complete.
 
 ## 5. Production deployment pass
 
