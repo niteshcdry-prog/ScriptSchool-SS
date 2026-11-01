@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import type { AdminAnalytics } from "@/lib/admin-analytics";
+import type { PlanId } from "@/lib/plans";
 import { applyVersionSnapshot, recordContentVersion, readVersionHistory, type ContentVersion } from "@/lib/content-versioning";
 
 export type AdminLesson = {
@@ -40,7 +42,7 @@ type Course = {
   published: boolean;
 };
 type Module = { id: string; course_id: string; title: string; sort_order: number };
-type AdminUser = { id: string; email: string; name: string; role: "learner" | "admin"; completedCount: number; createdAt: string };
+type AdminUser = { id: string; email: string; name: string; role: "learner" | "admin"; plan: PlanId; completedCount: number; createdAt: string };
 type Activity = { id: string; action: string; entityType: string; entityId: string; createdAt: string };
 type Tab = "content" | "users" | "activity";
 
@@ -95,11 +97,13 @@ export default function AdminDashboard({
   modules,
   lessons,
   activity,
+  analytics,
 }: {
   courses: Course[];
   modules: Module[];
   lessons: AdminLesson[];
   activity: Activity[];
+  analytics?: AdminAnalytics;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("content");
@@ -113,6 +117,7 @@ export default function AdminDashboard({
   const [showLessonPreview, setShowLessonPreview] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [userRoles, setUserRoles] = useState<Record<string, "learner" | "admin">>({});
+  const [userPlans, setUserPlans] = useState<Record<string, PlanId>>({});
   const [userPage, setUserPage] = useState(0);
   const [hasMoreUsers, setHasMoreUsers] = useState(false);
   const [versionNote, setVersionNote] = useState("");
@@ -241,6 +246,10 @@ export default function AdminDashboard({
         ...current,
         ...Object.fromEntries(received.map((user) => [user.id, user.role])),
       }));
+      setUserPlans((current) => ({
+        ...current,
+        ...Object.fromEntries(received.map((user) => [user.id, user.plan])),
+      }));
       setUserPage(nextPage);
       setHasMoreUsers(body.nextPage !== null && body.nextPage !== undefined);
     } catch (error) {
@@ -258,6 +267,21 @@ export default function AdminDashboard({
       setUsers((current) => current.map((row) => row.id === user.id ? { ...row, role: userRoles[user.id] } : row));
     } catch (error) {
       feedback(error instanceof Error ? error.message : "Role update failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function updatePlan(user: AdminUser) {
+    const plan = userPlans[user.id] || user.plan;
+    setBusy(true);
+    try {
+      await requestJson(`/api/admin/users/${user.id}/plan`, "PATCH", { plan });
+      setUsers((current) => current.map((row) => row.id === user.id ? { ...row, plan } : row));
+      feedback(`Plan updated for ${user.email}.`);
+      router.refresh();
+    } catch (error) {
+      feedback(error instanceof Error ? error.message : "Plan update failed.");
     } finally {
       setBusy(false);
     }
@@ -305,7 +329,6 @@ export default function AdminDashboard({
   }
 
   const learnerUsers = users.filter((user) => user.role === "learner");
-  const adminUsers = users.filter((user) => user.role === "admin");
   const averageCompletion = learnerUsers.length
     ? Math.round(learnerUsers.reduce((total, user) => total + user.completedCount, 0) / learnerUsers.length)
     : 0;
@@ -414,23 +437,33 @@ export default function AdminDashboard({
       <section className="admin-insights" aria-label="Admin learning analytics">
         <div className="insight-card">
           <span className="insight-label">Learners</span>
-          <strong>{learnerUsers.length || "—"}</strong>
-          <small>{users.length ? `${users.length} total accounts` : "Awaiting account sync"}</small>
+          <strong>{analytics ? analytics.learnerCount : (learnerUsers.length || "—")}</strong>
+          <small>{analytics ? `${analytics.totalAccounts} total accounts` : users.length ? `${users.length} total accounts` : "Awaiting account sync"}</small>
         </div>
         <div className="insight-card">
           <span className="insight-label">Average completion</span>
-          <strong>{averageCompletion}</strong>
-          <small>lessons per learner</small>
+          <strong>{analytics ? analytics.averageCompletion : averageCompletion}</strong>
+          <small>{analytics ? `${analytics.totalCompletedLessons} lessons completed across the cohort` : "lessons per learner"}</small>
         </div>
         <div className="insight-card">
           <span className="insight-label">Cohort progress</span>
-          <strong>{cohortCompletionRate}%</strong>
+          <strong>{analytics ? `${analytics.cohortCompletionRate}%` : `${cohortCompletionRate}%`}</strong>
           <small>of all available lessons completed</small>
         </div>
         <div className="insight-card">
           <span className="insight-label">Top learner</span>
-          <strong>{strongestLearner ? strongestLearner.name || strongestLearner.email : "—"}</strong>
+          <strong>{analytics?.topLearnerEmail || (strongestLearner ? strongestLearner.name || strongestLearner.email : "—")}</strong>
           <small>{strongestLearner ? `${strongestLearner.completedCount} lessons done` : "No learner data yet"}</small>
+        </div>
+        <div className="insight-card">
+          <span className="insight-label">Quiz accuracy</span>
+          <strong>{analytics ? `${analytics.quizAccuracy}%` : "—"}</strong>
+          <small>{analytics ? `${analytics.quizAttempts} recorded attempts` : "Analytics unavailable"}</small>
+        </div>
+        <div className="insight-card">
+          <span className="insight-label">Plan distribution</span>
+          <strong>{analytics ? `${analytics.proPlanCount} Pro` : "—"}</strong>
+          <small>{analytics ? `${analytics.freePlanCount} Free · ${analytics.adminCount} admins` : "Analytics unavailable"}</small>
         </div>
       </section>
       <div className="admin-tabs" role="tablist" aria-label="Administration sections">
@@ -571,8 +604,8 @@ export default function AdminDashboard({
         <section className="admin-panel user-panel">
           <div className="admin-panel-heading"><div><h2>Learner accounts</h2><p>Review access and course completion. Passwords are never available to administrators.</p></div></div>
           {!users.length && <p className="admin-empty">{busy ? "Loading accounts…" : "No accounts found yet."}</p>}
-          <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Learner</th><th>Role</th><th>Completed</th><th>Joined</th><th>Actions</th></tr></thead><tbody>
-            {users.map((user) => <tr key={user.id}><td><strong>{user.name || user.email || "Learner"}</strong><small>{user.email}</small></td><td><select value={userRoles[user.id] || user.role} onChange={(event) => setUserRoles({ ...userRoles, [user.id]: event.target.value as AdminUser["role"] })}><option value="learner">Learner</option><option value="admin">Administrator</option></select><button className="table-action" disabled={busy || (userRoles[user.id] || user.role) === user.role} type="button" onClick={() => void updateRole(user)}>Save role</button></td><td>{user.completedCount}</td><td>{new Date(user.createdAt).toLocaleDateString()}</td><td><button className="table-action danger" disabled={busy || user.completedCount === 0} type="button" onClick={() => void resetProgress(user)}>Reset progress</button></td></tr>)}
+          <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Learner</th><th>Role</th><th>Plan</th><th>Completed</th><th>Joined</th><th>Actions</th></tr></thead><tbody>
+            {users.map((user) => <tr key={user.id}><td><strong>{user.name || user.email || "Learner"}</strong><small>{user.email}</small></td><td><select value={userRoles[user.id] || user.role} onChange={(event) => setUserRoles({ ...userRoles, [user.id]: event.target.value as AdminUser["role"] })}><option value="learner">Learner</option><option value="admin">Administrator</option></select><button className="table-action" disabled={busy || (userRoles[user.id] || user.role) === user.role} type="button" onClick={() => void updateRole(user)}>Save role</button></td><td><select aria-label={`Plan for ${user.email}`} value={userPlans[user.id] || user.plan} onChange={(event) => setUserPlans({ ...userPlans, [user.id]: event.target.value as PlanId })}><option value="free">Free</option><option value="pro">Pro</option></select><button className="table-action" disabled={busy || (userPlans[user.id] || user.plan) === user.plan} type="button" onClick={() => void updatePlan(user)}>Save plan</button></td><td>{user.completedCount}</td><td>{new Date(user.createdAt).toLocaleDateString()}</td><td><button className="table-action danger" disabled={busy || user.completedCount === 0} type="button" onClick={() => void resetProgress(user)}>Reset progress</button></td></tr>)}
           </tbody></table></div>
           {hasMoreUsers && <button className="admin-secondary load-more" disabled={busy} type="button" onClick={() => void loadUsers(userPage + 1)}>Load more accounts</button>}
         </section>

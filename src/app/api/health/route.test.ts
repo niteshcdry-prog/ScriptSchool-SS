@@ -2,15 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   isConfigured: vi.fn(),
-  createServerClient: vi.fn(),
+  isAdminConfigured: vi.fn(),
+  createAdminClient: vi.fn(),
   databaseQuery: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/config", () => ({
   isSupabaseConfigured: mocks.isConfigured,
+  isSupabaseAdminConfigured: () => mocks.isConfigured() && mocks.isAdminConfigured(),
 }));
-vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: mocks.createServerClient,
+vi.mock("@/lib/supabase/admin", () => ({
+  createSupabaseAdminClient: mocks.createAdminClient,
 }));
 
 import { GET } from "./route";
@@ -19,8 +21,9 @@ describe("GET /api/health", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isConfigured.mockReturnValue(true);
+    mocks.isAdminConfigured.mockReturnValue(true);
     mocks.databaseQuery.mockResolvedValue({ error: null });
-    mocks.createServerClient.mockResolvedValue({
+    mocks.createAdminClient.mockReturnValue({
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           limit: mocks.databaseQuery,
@@ -32,14 +35,28 @@ describe("GET /api/health", () => {
   it("reports a healthy database connection", async () => {
     const response = await GET();
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ status: "ok", checks: { database: true } });
+    const payload = await response.json();
+    expect(payload.status).toBe("ok");
+    expect(payload.service).toBe("script-school");
+    expect(payload.checks).toEqual({ database: true });
+    expect(typeof payload.timestamp).toBe("string");
   });
 
   it("reports degraded when the database is not configured", async () => {
     mocks.isConfigured.mockReturnValue(false);
     const response = await GET();
     expect(response.status).toBe(503);
-    expect(mocks.createServerClient).not.toHaveBeenCalled();
+    const payload = await response.json();
+    expect(payload.status).toBe("degraded");
+    expect(payload.checks).toEqual({ database: false });
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
+  it("reports degraded when the server-only database key is not configured", async () => {
+    mocks.isAdminConfigured.mockReturnValue(false);
+    const response = await GET();
+    expect(response.status).toBe(503);
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
   });
 
   it("reports degraded when the database query fails", async () => {

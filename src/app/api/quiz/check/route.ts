@@ -47,9 +47,12 @@ export async function POST(request: Request) {
   });
   if (error) {
     console.error("Quiz answer check failed.", error);
-    const status = error.message.includes("not found") ? 404 : 500;
+    const status = error.message.includes("not found") ? 404
+      : error.message.includes("Pro plan") ? 403 : 500;
     return NextResponse.json({
-      error: status === 404 ? "That quiz question could not be found." : "The quiz answer could not be checked.",
+      error: status === 404 ? "That quiz question could not be found."
+        : status === 403 ? "An active Pro plan is required for this course."
+          : "The quiz answer could not be checked.",
     }, { status });
   }
 

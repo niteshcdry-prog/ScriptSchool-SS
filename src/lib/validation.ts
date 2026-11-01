@@ -84,6 +84,10 @@ export const profileUpdateSchema = z.object({
   displayName: z.string().trim().min(1).max(100),
 });
 
+export const accountPlanUpdateSchema = z.object({
+  plan: z.enum(["free", "pro"]),
+});
+
 export const publishContentSchema = z.discriminatedUnion("entityType", [
   z.object({
     entityType: z.literal("course"),
